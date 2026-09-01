@@ -18,7 +18,17 @@ import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SPEC = os.path.join(ROOT, "packaging", "pdfstudio.spec")
-VERSION = "1.0.0"
+
+
+def _version() -> str:
+    """Sürüm tek yerde tanımlı: pdfstudio/__init__.py"""
+    import re
+    with open(os.path.join(ROOT, "pdfstudio", "__init__.py"), encoding="utf-8") as fh:
+        m = re.search(r'__version__\s*=\s*"([^"]+)"', fh.read())
+    return m.group(1) if m else "1.0.0"
+
+
+VERSION = _version()
 WINDOWS = sys.platform.startswith("win")
 
 

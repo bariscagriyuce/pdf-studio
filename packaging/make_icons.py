@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import os
 import struct
-import sys
 
 from PySide6.QtCore import QBuffer, QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QImage, QLinearGradient, QPainter, QPixmap
@@ -137,7 +136,7 @@ def build_ico(path: str) -> None:
 
 
 def main() -> int:
-    app = QApplication.instance() or QApplication([])  # noqa: F841
+    QApplication.instance() or QApplication([])  # QPixmap için gerekli
     os.makedirs(OUT_DIR, exist_ok=True)
 
     png_path = os.path.join(OUT_DIR, "icon.png")

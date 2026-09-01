@@ -29,8 +29,9 @@ from .panels import (AnnotationPanel, FormPanel, ImagePanel, OutlinePanel, Searc
 from .theme import THEMES, stylesheet
 from .tools import TOOL_LABELS, Tool
 
+from .. import __version__ as APP_VERSION
+
 APP_NAME = "PDF Studio"
-APP_VERSION = "1.0.0"
 PDF_FILTER = "PDF dosyaları (*.pdf);;Tüm dosyalar (*)"
 IMAGE_FILTER = "Görüntüler (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff);;Tüm dosyalar (*)"
 

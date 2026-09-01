@@ -5,7 +5,10 @@ Bu klasör, PDF Studio'yu kurulabilir dosyalara dönüştüren her şeyi içerir
 | Dosya | Görevi |
 |---|---|
 | `pdfstudio.spec` | PyInstaller yapılandırması (Linux + Windows ortak). `PDFSTUDIO_ONEFILE=1` ortam değişkeni tek dosyalık çıktı üretir. |
-| `version_info.txt` | Windows `.exe` sürüm bilgisi (Özellikler → Ayrıntılar sekmesi) |
+| `version_info.txt` | Windows `.exe` sürüm bilgisi — **üretilen dosya**, elle düzenlemeyin |
+| `make_version_info.py` | `version_info.txt` üreteci |
+| `set_version.py` | Sürümü tek komutla her yere işler (`__init__.py` + `version_info.txt`) |
+| `make_icons.py` | `icon.png` ve çok boyutlu `icon.ico` üreteci |
 | `pdfstudio.iss` | Inno Setup kurulum sihirbazı betiği |
 | `LICENSE-notice.txt` | Kurulumda gösterilen lisans metni |
 | `installer_header.sh` | Linux `.run` dosyasının kendi kendini açan başlığı |
@@ -53,6 +56,19 @@ iscc packaging\pdfstudio.iss
 $env:PDFSTUDIO_ONEFILE = "1"
 pyinstaller --noconfirm --clean --distpath dist-onefile packaging\pdfstudio.spec
 ```
+
+## Sürüm numarası
+
+Tek kaynak: `pdfstudio/__init__.py` içindeki `__version__`.
+
+```bash
+python packaging/set_version.py 1.2.3   # her yere işler
+```
+
+CI'da etiketli derlemelerde sürüm git etiketinden okunur (`v1.2.3` → `1.2.3`) ve
+aynı betikle uygulanır. Ön sürüm etiketleri (`1.2.3-beta1`) desteklenir; Windows
+`VersionInfoVersion` alanı yalnızca sayı kabul ettiği için ayrıca sayısal bir
+değer türetilir.
 
 ## Otomatik derleme (GitHub Actions)
 

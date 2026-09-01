@@ -10,6 +10,11 @@
 #ifndef AppVersion
   #define AppVersion   "1.0.0"
 #endif
+; VersionInfoVersion yalnizca sayisal olabilir (1.2.3 gibi); on-surum
+; etiketli surumlerde (1.2.3-beta) ayri bir deger gerekir.
+#ifndef AppVersionNumeric
+  #define AppVersionNumeric AppVersion
+#endif
 #define AppPublisher   "PDF Studio"
 #define AppExeName     "PDFStudio.exe"
 #define AppId          "{{9F3A6C41-7B2E-4D58-9A16-3C7E5D8B1042}"
@@ -21,7 +26,7 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
-VersionInfoVersion={#AppVersion}
+VersionInfoVersion={#AppVersionNumeric}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes

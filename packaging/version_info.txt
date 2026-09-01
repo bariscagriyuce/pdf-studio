@@ -1,4 +1,4 @@
-# PyInstaller için Windows sürüm kaynağı (VERSIONINFO)
+# packaging/make_version_info.py tarafindan uretildi - elle duzenlemeyin.
 VSVersionInfo(
   ffi=FixedFileInfo(
     filevers=(1, 0, 0, 0),
@@ -16,12 +16,12 @@ VSVersionInfo(
         '041F04B0',
         [StringStruct('CompanyName', 'PDF Studio'),
          StringStruct('FileDescription', 'PDF Studio - PDF Duzenleyici'),
-         StringStruct('FileVersion', '1.0.0.0'),
+         StringStruct('FileVersion', '1.0.0'),
          StringStruct('InternalName', 'PDFStudio'),
          StringStruct('LegalCopyright', 'PyMuPDF (AGPL-3.0) ve PySide6 (LGPL-3.0) kullanir'),
          StringStruct('OriginalFilename', 'PDFStudio.exe'),
          StringStruct('ProductName', 'PDF Studio'),
-         StringStruct('ProductVersion', '1.0.0.0')])
+         StringStruct('ProductVersion', '1.0.0')])
     ]),
     VarFileInfo([VarStruct('Translation', [0x041F, 1200])])
   ]

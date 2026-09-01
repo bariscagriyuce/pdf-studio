@@ -106,11 +106,27 @@ bash packaging/arch/build-arch-package.sh dist/PDFStudio 1.0.0
 Windows dosyalarını Linux'tan üretmek mümkün değildir. `.github/workflows/build.yml`
 iş akışı her iki platformu da GitHub'ın makinelerinde derler:
 
-- **Elle:** depo → *Actions* → *Kurulum dosyalarını derle* → *Run workflow*
-- **Sürüm:** `git tag v1.0.0 && git push --tags` → dosyalar *Releases* sayfasına
-  SHA256 toplamlarıyla yüklenir
+- **Elle derleme:** depo → *Actions* → *Kurulum dosyalarını derle* → *Run workflow*.
+  Çıktılar artefakt olarak 90 gün saklanır.
+- **Sürüm yayımlama:** `git tag v1.2.3 && git push --tags`. Dosyalar *Releases*
+  sayfasına SHA256 toplamlarıyla yüklenir ve **kalıcı olarak orada kalır**
+  (artefaktlardan farklı olarak süresi dolmaz).
 
 Her yapı, yüklenmeden önce gömülü sınamadan geçirilir.
+
+#### Sürüm numarası nasıl belirlenir
+
+Tek kaynak `pdfstudio/__init__.py` içindeki `__version__`. Etiketli bir derlemede
+sürüm **etiketten** okunur ve `packaging/set_version.py` ile her yere işlenir:
+dosya adları, Windows exe özellikleri, kurulum sihirbazı ve uygulamanın "Hakkında"
+penceresi. Yani `v1.2.3` etiketi `PDFStudio-1.2.3-Setup.exe` üretir; elle sürüm
+güncellemek gerekmez.
+
+Yerelde sürüm değiştirmek için:
+
+```bash
+python packaging/set_version.py 1.2.3
+```
 
 ### Linux masaüstü kısayolu (kaynaktan çalıştıranlar için)
 
