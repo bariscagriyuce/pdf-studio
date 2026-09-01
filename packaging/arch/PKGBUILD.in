@@ -1,0 +1,38 @@
+# Maintainer: PDF Studio
+# Önceden derlenmiş PyInstaller çıktısını paketler (build-arch-package.sh üretir).
+pkgname=pdf-studio
+pkgver=__VERSION__
+pkgrel=1
+pkgdesc="Ayrıntılı PDF düzenleyici — metin düzenleme, açıklama, form, karartma, OCR"
+arch=('x86_64')
+url="https://github.com/"
+license=('AGPL-3.0-or-later')
+depends=('glibc' 'fontconfig' 'freetype2')
+optdepends=(
+    'tesseract: taranmış belgelerde OCR'
+    'tesseract-data-tur: Türkçe OCR dil verisi'
+    'tesseract-data-eng: İngilizce OCR dil verisi'
+    'xdg-desktop-portal: yerel dosya seçme pencereleri'
+)
+provides=('pdf-studio')
+conflicts=('pdf-studio')
+# PyInstaller çıktısı zaten paketlenmiş; strip binary'yi bozar
+options=('!strip' '!debug' '!lto' 'emptydirs')
+source=('PDFStudio-dist.tar.zst' 'pdf-studio.desktop' 'pdf-studio.png' 'LICENSE-notice.txt')
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP')
+
+package() {
+    install -dm755 "$pkgdir/opt/pdf-studio"
+    cp -a "$srcdir/PDFStudio/." "$pkgdir/opt/pdf-studio/"
+    chmod 755 "$pkgdir/opt/pdf-studio/PDFStudio"
+
+    install -dm755 "$pkgdir/usr/bin"
+    ln -sf /opt/pdf-studio/PDFStudio "$pkgdir/usr/bin/pdf-studio"
+
+    install -Dm644 "$srcdir/pdf-studio.desktop" \
+        "$pkgdir/usr/share/applications/pdf-studio.desktop"
+    install -Dm644 "$srcdir/pdf-studio.png" \
+        "$pkgdir/usr/share/icons/hicolor/512x512/apps/pdf-studio.png"
+    install -Dm644 "$srcdir/LICENSE-notice.txt" \
+        "$pkgdir/usr/share/licenses/pdf-studio/LICENSE"
+}

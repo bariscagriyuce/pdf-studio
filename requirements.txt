@@ -1,0 +1,3 @@
+# PDF Studio bağımlılıkları
+PySide6>=6.5           # Qt 6 arayüzü (Windows + Linux)
+PyMuPDF>=1.24          # PDF motoru (MuPDF)

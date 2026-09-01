@@ -1,0 +1,26 @@
+# Sanal ortamlar
+.venv/
+build-venv/
+__pycache__/
+*.py[cod]
+
+# Derleme çıktıları
+build/
+dist/
+dist-onefile/
+*.spec.bak
+selftest.log
+
+# Üretilen kurulum dosyaları (GitHub Releases üzerinden dağıtılır)
+*.run
+*.pkg.tar.zst
+*.deb
+*.rpm
+*.AppImage
+PDFStudio-*.exe
+
+# Düzenleyici / sistem
+.idea/
+.vscode/
+*.swp
+.DS_Store

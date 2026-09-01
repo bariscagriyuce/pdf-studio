@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=PDF Studio
+GenericName=PDF Düzenleyici
+Comment=PDF dosyalarını görüntüleyin ve ayrıntılı olarak düzenleyin
+Exec=/opt/pdf-studio/run.sh %f
+Icon=pdf-studio
+Terminal=false
+Categories=Office;Viewer;Publishing;
+MimeType=application/pdf;
+StartupNotify=true

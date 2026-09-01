@@ -1,0 +1,195 @@
+name: Kurulum dosyalarını derle
+
+# Windows kurulum sihirbazı + taşınabilir exe ve Linux .run kurulumu üretir.
+# Elle çalıştırmak için: Actions sekmesi → "Kurulum dosyalarını derle" → Run workflow
+# Sürüm yayımlamak için:  git tag v1.0.0 && git push --tags
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+
+env:
+  PYTHON_VERSION: '3.12'
+  APP_VERSION: '1.0.0'
+
+jobs:
+  # =========================================================== WINDOWS
+  windows:
+    name: Windows (kurulum + taşınabilir)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Bağımlılıkları kur
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "PySide6-Essentials>=6.7" "PyMuPDF>=1.24" pyinstaller
+
+      - name: Klasör dağıtımını derle
+        run: |
+          pyinstaller --noconfirm --clean packaging/pdfstudio.spec
+          if (-not (Test-Path "dist\PDFStudio\PDFStudio.exe")) { throw "PDFStudio.exe uretilmedi" }
+
+      - name: Kendi kendini sınama (klasör dağıtımı)
+        # CI'da pencere oturumu güvenilir değil; offscreen sürücüsü paketleme
+        # ve iş mantığını doğrular (gerçek pencere davranışı yerel olarak sınanır)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $p = Start-Process -FilePath "dist\PDFStudio\PDFStudio.exe" `
+               -ArgumentList "--self-test","--log","selftest-dir.log" -Wait -PassThru
+          if (Test-Path selftest-dir.log) { Get-Content selftest-dir.log }
+          if ($p.ExitCode -ne 0) { throw "Sınama başarısız (kod $($p.ExitCode))" }
+
+      - name: Kurulum sihirbazını derle (Inno Setup)
+        run: |
+          choco install innosetup --no-progress -y
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "Inno Setup bulunamadi: $iscc" }
+          & $iscc "/DAppVersion=${{ env.APP_VERSION }}" packaging\pdfstudio.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup derlemesi basarisiz ($LASTEXITCODE)" }
+          Get-ChildItem dist\installer
+          $setup = Get-ChildItem dist\installer\*Setup.exe | Select-Object -First 1
+          if (-not $setup) { throw "Setup.exe uretilmedi" }
+          Write-Host "Kurulum sihirbazi: $($setup.Name)  ($([math]::Round($setup.Length/1MB,1)) MB)"
+
+      - name: Taşınabilir tek dosyayı derle
+        env:
+          PDFSTUDIO_ONEFILE: '1'
+        run: |
+          pyinstaller --noconfirm --clean --distpath dist-onefile packaging/pdfstudio.spec
+          Rename-Item dist-onefile\PDFStudio.exe "PDFStudio-${{ env.APP_VERSION }}-portable.exe"
+          Get-ChildItem dist-onefile
+
+      - name: Kendi kendini sınama (taşınabilir)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $exe = "dist-onefile\PDFStudio-${{ env.APP_VERSION }}-portable.exe"
+          $p = Start-Process -FilePath $exe `
+               -ArgumentList "--self-test","--log","selftest-portable.log" -Wait -PassThru
+          if (Test-Path selftest-portable.log) { Get-Content selftest-portable.log }
+          if ($p.ExitCode -ne 0) { throw "Sınama başarısız (kod $($p.ExitCode))" }
+
+      - name: Sınama günlüklerini yükle (hata ayıklama için)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-sinama-gunlukleri
+          path: '*.log'
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Çıktıları yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-kurulum
+          path: |
+            dist/installer/*.exe
+            dist-onefile/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  # ============================================================= LINUX
+  linux:
+    name: Linux (.run kurulumu)
+    # 22.04 ile derlenir → glibc 2.35+ olan tüm dağıtımlarda çalışır
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Sistem bağımlılıkları
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 \
+            libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-randr0 \
+            libxcb-render-util0 libdbus-1-3 libfontconfig1 \
+            fonts-dejavu-core fonts-liberation xz-utils
+
+      - name: Python bağımlılıkları
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "PySide6-Essentials>=6.7" "PyMuPDF>=1.24" pyinstaller
+
+      - name: Derle
+        run: pyinstaller --noconfirm --clean packaging/pdfstudio.spec
+
+      - name: Kendi kendini sınama
+        run: |
+          chmod +x dist/PDFStudio/PDFStudio
+          QT_QPA_PLATFORM=offscreen ./dist/PDFStudio/PDFStudio --self-test
+
+      - name: Kurulum dosyasını oluştur
+        run: |
+          bash packaging/make_linux_installer.sh \
+            dist/PDFStudio \
+            "dist/PDFStudio-${APP_VERSION}-x86_64.run" \
+            "${APP_VERSION}"
+          ls -lh dist/*.run
+
+      - name: Kurulumu sına (kur → çalıştır → kaldır)
+        run: |
+          export HOME="$(mktemp -d)"
+          bash "dist/PDFStudio-${APP_VERSION}-x86_64.run" --user < /dev/null
+          QT_QPA_PLATFORM=offscreen "$HOME/.local/bin/pdf-studio" --self-test
+          bash "dist/PDFStudio-${APP_VERSION}-x86_64.run" --uninstall
+          test ! -d "$HOME/.local/opt/pdf-studio" && echo "Kaldırma temiz ✔"
+
+      - name: Çıktıyı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-kurulum
+          path: dist/*.run
+          if-no-files-found: error
+          retention-days: 30
+
+  # =========================================================== YAYIMLA
+  release:
+    name: Sürüm yayımla
+    needs: [windows, linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: cikti
+
+      - name: Dosyaları topla
+        run: |
+          mkdir -p yayin
+          find cikti -type f \( -name '*.exe' -o -name '*.run' \) -exec cp {} yayin/ \;
+          cd yayin && sha256sum * > SHA256SUMS.txt && ls -lh
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: yayin/*
+          generate_release_notes: true
+          body: |
+            ## PDF Studio ${{ github.ref_name }}
+
+            | Dosya | Platform | Açıklama |
+            |---|---|---|
+            | `PDFStudio-*-Setup.exe` | Windows 10/11 | Kurulum sihirbazı — Başlat menüsü, masaüstü kısayolu, PDF ilişkilendirmesi, Denetim Masası'ndan kaldırma |
+            | `PDFStudio-*-portable.exe` | Windows 10/11 | Taşınabilir tek dosya — kurulum yok, çift tıkla çalışır |
+            | `PDFStudio-*-x86_64.run` | Linux (glibc 2.35+) | `bash PDFStudio-*.run` ile kurun, `--uninstall` ile kaldırın |
+
+            `SHA256SUMS.txt` ile dosya bütünlüğünü doğrulayabilirsiniz.
+
+            Her yapı, derleme sırasında gömülü sınamadan (`--self-test`) geçirilmiştir.

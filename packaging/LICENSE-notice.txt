@@ -1,0 +1,24 @@
+PDF STUDIO - LISANS VE BILESEN BILGISI
+=======================================
+
+PDF Studio uygulama kodu serbestce kullanilabilir.
+
+Uygulama asagidaki acik kaynak bilesenleri icerir; kendi lisanslari gecerlidir:
+
+1) PyMuPDF / MuPDF  -  GNU AGPL-3.0
+   PDF motoru. Kisisel kullanim ve acik kaynak dagitim icin serbesttir.
+   Uygulamayi kapali kaynak bir urun olarak TICARI dagitmak isterseniz
+   Artifex Software'den ticari lisans almaniz gerekir.
+   https://pymupdf.readthedocs.io/en/latest/about.html#license-and-copyright
+
+2) PySide6 / Qt 6  -  GNU LGPL-3.0
+   Kullanici arayuzu cercevesi.
+   https://www.qt.io/licensing
+
+3) Python  -  PSF Lisansi
+   https://docs.python.org/3/license.html
+
+Bu kurulumu tamamlayarak yukaridaki lisans kosullarini kabul etmis olursunuz.
+
+UYARI: Karartma (redaksiyon) islemi uygulanip belge kaydedildiginde silinen
+icerik geri getirilemez. Onemli belgelerin yedegini alin.

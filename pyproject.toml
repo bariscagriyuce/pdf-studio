@@ -1,0 +1,19 @@
+[project]
+name = "pdf-studio"
+version = "1.0.0"
+description = "Windows ve Linux için ayrıntılı PDF düzenleyici (Acrobat Pro benzeri)"
+requires-python = ">=3.9"
+dependencies = [
+    "PySide6>=6.5",
+    "PyMuPDF>=1.24",
+]
+
+[project.scripts]
+pdf-studio = "pdfstudio.app:main"
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["pdfstudio", "pdfstudio.core", "pdfstudio.ui"]
