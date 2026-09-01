@@ -141,12 +141,12 @@ def main() -> int:
 
     png_path = os.path.join(OUT_DIR, "icon.png")
     draw(512).save(png_path)
-    print(f"✔ {png_path}")
+    print(f"OK: {png_path}")
 
     ico_path = os.path.join(OUT_DIR, "icon.ico")
     build_ico(ico_path)
-    print(f"✔ {ico_path}  ({os.path.getsize(ico_path) / 1024:.0f} KB, "
-          f"{len(BMP_SIZES) + len(PNG_SIZES)} boyut)")
+    print(f"OK: {ico_path} ({os.path.getsize(ico_path) / 1024:.0f} KB, "
+          f"{len(BMP_SIZES) + len(PNG_SIZES)} sizes)")
     return 0
 
 

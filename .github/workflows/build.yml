@@ -16,6 +16,9 @@ on:
 
 env:
   PYTHON_VERSION: '3.12'
+  # Windows konsolu varsayilan olarak cp1252; Python ciktisindaki
+  # ASCII disi karakterler UnicodeEncodeError veriyor
+  PYTHONIOENCODING: 'utf-8'
 
 jobs:
   # ============================================================ SÜRÜM

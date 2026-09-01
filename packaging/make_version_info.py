@@ -67,7 +67,7 @@ def main() -> int:
     tup = numeric_tuple(version)
     with open(OUT, "w", encoding="ascii") as fh:
         fh.write(TEMPLATE.format(tup=str(tup), display=version))
-    print(f"✔ {OUT}  (sürüm {version} → {tup})")
+    print(f"OK: {OUT} (version {version} -> {tup})")
     return 0
 
 

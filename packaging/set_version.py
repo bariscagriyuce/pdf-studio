@@ -21,22 +21,22 @@ INIT = os.path.join(ROOT, "pdfstudio", "__init__.py")
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("Kullanım: python packaging/set_version.py <sürüm>", file=sys.stderr)
+        print("Kullanim: python packaging/set_version.py <surum>", file=sys.stderr)
         return 2
     version = sys.argv[1].strip().lstrip("vV")
     if not re.match(r"^\d+(\.\d+)*([-+][0-9A-Za-z.\-]+)?$", version):
-        print(f"Geçersiz sürüm biçimi: {version}", file=sys.stderr)
+        print(f"Gecersiz surum bicimi: {version}", file=sys.stderr)
         return 2
 
     with open(INIT, encoding="utf-8") as fh:
         text = fh.read()
     new, n = re.subn(r'__version__\s*=\s*"[^"]*"', f'__version__ = "{version}"', text)
     if not n:
-        print(f"__version__ bulunamadı: {INIT}", file=sys.stderr)
+        print(f"__version__ bulunamadi: {INIT}", file=sys.stderr)
         return 1
     with open(INIT, "w", encoding="utf-8") as fh:
         fh.write(new)
-    print(f"✔ {INIT} → {version}")
+    print(f"OK: {INIT} -> {version}")
 
     subprocess.check_call([sys.executable,
                            os.path.join(HERE, "make_version_info.py"), version])
