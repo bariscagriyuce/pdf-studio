@@ -145,6 +145,28 @@ def run(screenshot: str | None = None, log_path: str | None = None) -> int:
     check("yazdırma altyapısı", lambda: __import__(
         "PySide6.QtPrintSupport", fromlist=["QPrinter"]).QPrinter())
 
+    from .core import areaprint as ap
+    area = pymupdf.Rect(55, 65, 420, 100)
+    check("alanı görüntüye çevir", lambda: expect(
+        ap.render_area(win.document.page(0), area, 72).width > 50, "boş görüntü"))
+
+    def _area_pdf():
+        out = os.path.join(tmp, "alan.pdf")
+        ap.export_area_pdf(win.document.doc, [(0, area)], out)
+        with pymupdf.open(out) as d:
+            expect(d.page_count == 1 and d[0].get_text().strip(), "alan PDF'i boş")
+    check("alanı PDF olarak kaydet", _area_pdf)
+
+    def _area_print():
+        from PySide6.QtPrintSupport import QPrinter
+        pr = QPrinter(QPrinter.HighResolution)
+        pr.setOutputFormat(QPrinter.PdfFormat)
+        pr.setOutputFileName(os.path.join(tmp, "alan_baski.pdf"))
+        n = win._print_area_render(pr, [(0, area), (1, area)],
+                                   {"mode": ap.FIT, "marks": True})
+        expect(n == 2, f"2 kâğıt bekleniyordu, {n} basıldı")
+    check("seçili alanı yazdır", _area_print)
+
     ok, msg = exporting.tesseract_available()
     langs = exporting.available_languages() if ok else []
     out(f"  · OCR: {'var — ' + ', '.join(langs) if langs else 'yok (' + msg + ')'}")

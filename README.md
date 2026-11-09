@@ -181,6 +181,14 @@ kontrolü (yazdırma, kopyalama, düzenleme, form doldurma…), şifre kaldırma
 **gerçek karartma** (içerik kalıcı silinir, sadece üstü boyanmaz), meta veri ve
 JavaScript temizliği.
 
+### Seçili alanı yazdırma
+**Alanı yazdır** aracıyla (`Ctrl+Shift+P`, araç çubuğu veya sağ tık menüsü)
+sayfada bir kutu çizin; yalnızca o bölge basılır. Seçenekler: kâğıda sığdır,
+gerçek boyut veya özel ölçek; ortalama; kesim işaretleri; aynı alanı birden
+çok sayfada basma (etiket, fiş, form kesiti için). Baskıdan önce önizleme
+açılır. **PDF olarak kaydet** ise alanı gerçek boyutta, vektör kalitesinde ayrı
+bir PDF'e çıkarır — metin seçilebilir kalır, açıklamalar dahil edilir.
+
 ### Dışa aktarma
 PNG/JPG/WEBP görüntü (36–1200 DPI, gri tonlama, saydam arka plan), düz metin,
 HTML, XHTML, XML, JSON, seçili sayfaları ayrı PDF, gömülü görüntüler,
@@ -209,6 +217,7 @@ koyu ve açık tema, baskı önizleme ve yazdırma, PDF sürükleyip bırakma.
 | `Ctrl+Z` / `Ctrl+Y` | Geri al / Yinele |
 | `Ctrl+F` / `F3` / `Shift+F3` | Bul / sonraki / önceki sonuç |
 | `Ctrl+P` | Yazdır |
+| `Ctrl+Shift+P` | Seçili alanı yazdır |
 | `Ctrl+=` / `Ctrl+-` / `Ctrl+0` | Yakınlaştır / uzaklaştır / %100 |
 | `Ctrl+1` / `Ctrl+2` | Genişliğe / sayfaya sığdır |
 | `Ctrl` + fare tekerleği | Sürekli yakınlaştırma |

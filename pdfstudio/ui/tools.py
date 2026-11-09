@@ -33,13 +33,14 @@ class Tool(str, Enum):
     FORM_TEXT = "form_text"
     FORM_CHECK = "form_check"
     MEASURE = "measure"
+    PRINT_AREA = "print_area"
 
 
 #: Sürükleyerek dikdörtgen çizen araçlar
 RECT_TOOLS = {
     Tool.FREETEXT, Tool.RECT, Tool.ELLIPSE, Tool.IMAGE, Tool.SIGNATURE, Tool.STAMP,
     Tool.LINK, Tool.REDACT, Tool.CROP, Tool.TEXT_ADD, Tool.ERASE_AREA,
-    Tool.FORM_TEXT, Tool.FORM_CHECK,
+    Tool.FORM_TEXT, Tool.FORM_CHECK, Tool.PRINT_AREA,
 }
 #: İki nokta arasında çizgi çizen araçlar
 LINE_TOOLS = {Tool.LINE, Tool.ARROW, Tool.MEASURE}
@@ -74,6 +75,7 @@ TOOL_LABELS = {
     Tool.FORM_TEXT: "Form: metin kutusu",
     Tool.FORM_CHECK: "Form: onay kutusu",
     Tool.MEASURE: "Ölç",
+    Tool.PRINT_AREA: "Alanı yazdır",
 }
 
 TOOL_HINTS = {
@@ -85,6 +87,7 @@ TOOL_HINTS = {
     Tool.REDACT: "Alanları işaretleyin, sonra 'Karartmaları uygula' deyin — içerik kalıcı silinir.",
     Tool.CROP: "Yeni sayfa sınırını çizin.",
     Tool.ERASE_AREA: "Silinecek alanı çizin; o alandaki metin/grafik kalıcı kaldırılır.",
+    Tool.PRINT_AREA: "Yazdırmak istediğiniz alanı çizin; yalnızca o bölge basılır.",
 }
 
 

@@ -924,3 +924,140 @@ class BatchTextDialog(QDialog):
                        bold=self.bold.isChecked(), italic=self.italic.isChecked(),
                        align=self.align.currentIndex())
         return self.editor.toPlainText(), st
+
+
+# ---------------------------------------------------------------- alan yazdır
+class AreaPrintDialog(QDialog):
+    """Seçili alanı yazdırma / PDF'e kaydetme seçenekleri."""
+
+    PRINT = "print"
+    PDF = "pdf"
+
+    def __init__(self, total: int, pno: int, size_pt: tuple[float, float], parent=None):
+        super().__init__(parent)
+        from ..core import areaprint as ap
+        self._ap = ap
+        self.setWindowTitle("Seçili alanı yazdır")
+        self.setMinimumWidth(460)
+        self.total = total
+        self.pno = pno
+        self.action = self.PRINT
+
+        mm = 25.4 / 72
+        w, h = size_pt
+        lay = QVBoxLayout(self)
+        info = QLabel(f"<b>Sayfa {pno + 1}</b> · seçili alan "
+                      f"{w * mm:.0f} × {h * mm:.0f} mm")
+        lay.addWidget(info)
+
+        # --- ölçek
+        scale_box = QGroupBox("Ölçek")
+        sl = QVBoxLayout(scale_box)
+        self.fit_rb = QRadioButton("Kâğıda sığdır")
+        self.fit_rb.setChecked(True)
+        self.no_upscale = QCheckBox("Küçük alanları büyütme (en fazla %100)")
+        self.no_upscale.setContentsMargins(22, 0, 0, 0)
+        self.actual_rb = QRadioButton("Gerçek boyut (%100)")
+        custom_row = QHBoxLayout()
+        self.custom_rb = QRadioButton("Özel:")
+        self.custom_pct = QSpinBox()
+        self.custom_pct.setRange(10, 1000)
+        self.custom_pct.setValue(150)
+        self.custom_pct.setSuffix(" %")
+        self.custom_pct.valueChanged.connect(lambda _v: self.custom_rb.setChecked(True))
+        custom_row.addWidget(self.custom_rb)
+        custom_row.addWidget(self.custom_pct)
+        custom_row.addStretch(1)
+        sl.addWidget(self.fit_rb)
+        sl.addWidget(self.no_upscale)
+        sl.addWidget(self.actual_rb)
+        sl.addLayout(custom_row)
+        self.fit_rb.toggled.connect(self.no_upscale.setEnabled)
+        lay.addWidget(scale_box)
+
+        # --- yerleşim
+        place_box = QGroupBox("Yerleşim")
+        pl = QVBoxLayout(place_box)
+        self.center_cb = QCheckBox("Kâğıdın ortasına yerleştir")
+        self.center_cb.setChecked(True)
+        self.marks_cb = QCheckBox("Kesim işaretleri ekle (köşelere ince çizgi)")
+        pl.addWidget(self.center_cb)
+        pl.addWidget(self.marks_cb)
+        lay.addWidget(place_box)
+
+        # --- sayfalar
+        pages_box = QGroupBox("Sayfalar")
+        pgl = QVBoxLayout(pages_box)
+        self.this_rb = QRadioButton(f"Yalnızca bu sayfa ({pno + 1})")
+        self.this_rb.setChecked(True)
+        row = QHBoxLayout()
+        self.multi_rb = QRadioButton("Aynı alanı şu sayfalarda:")
+        self.range_edit = QLineEdit()
+        self.range_edit.setPlaceholderText(f"örn. 1-{total} veya 2, 5, 8")
+        self.range_edit.textEdited.connect(lambda _t: self.multi_rb.setChecked(True))
+        row.addWidget(self.multi_rb)
+        row.addWidget(self.range_edit, 1)
+        hint = QLabel("Her sayfadaki aynı bölge ayrı bir kâğıda basılır "
+                      "(etiket, fiş, form kesiti gibi).")
+        hint.setProperty("hint", True)
+        hint.setWordWrap(True)
+        pgl.addWidget(self.this_rb)
+        pgl.addLayout(row)
+        pgl.addWidget(hint)
+        lay.addWidget(pages_box)
+
+        # --- düğmeler
+        buttons = QHBoxLayout()
+        pdf_btn = QPushButton("PDF olarak kaydet…")
+        pdf_btn.setToolTip("Alanı gerçek boyutta, vektör kalitesinde ayrı bir PDF'e kaydeder;\n"
+                           "metin seçilebilir kalır. Ölçek seçenekleri uygulanmaz.")
+        pdf_btn.clicked.connect(self._choose_pdf)
+        cancel = QPushButton("Vazgeç")
+        cancel.clicked.connect(self.reject)
+        ok = QPushButton("Önizle ve yazdır…")
+        ok.setProperty("accent", True)
+        ok.setDefault(True)
+        ok.clicked.connect(self._choose_print)
+        buttons.addWidget(pdf_btn)
+        buttons.addStretch(1)
+        buttons.addWidget(cancel)
+        buttons.addWidget(ok)
+        lay.addLayout(buttons)
+
+    def _choose_print(self):
+        if self._validate():
+            self.action = self.PRINT
+            self.accept()
+
+    def _choose_pdf(self):
+        if self._validate():
+            self.action = self.PDF
+            self.accept()
+
+    def _validate(self) -> bool:
+        if self.multi_rb.isChecked() and not self.pages():
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Sayfa aralığı", "Geçerli bir sayfa aralığı girin.")
+            return False
+        return True
+
+    def pages(self) -> list[int]:
+        if self.multi_rb.isChecked():
+            return parse_page_range(self.range_edit.text(), self.total)
+        return [self.pno]
+
+    def options(self) -> dict:
+        ap = self._ap
+        if self.actual_rb.isChecked():
+            mode = ap.ACTUAL
+        elif self.custom_rb.isChecked():
+            mode = ap.CUSTOM
+        else:
+            mode = ap.FIT
+        return {
+            "mode": mode,
+            "scale": self.custom_pct.value() / 100.0,
+            "upscale": not self.no_upscale.isChecked(),
+            "center": self.center_cb.isChecked(),
+            "marks": self.marks_cb.isChecked(),
+        }

@@ -5,8 +5,9 @@ import os
 import sys
 
 import pymupdf
-from PySide6.QtCore import QSettings, QSize, Qt, QTimer
-from PySide6.QtGui import (QAction, QActionGroup, QGuiApplication, QImage,
+from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QTimer
+from PySide6.QtGui import (QAction, QActionGroup, QColor, QGuiApplication, QImage,
+                           QPageLayout, QPen,
                            QKeySequence, QPainter)
 from PySide6.QtPrintSupport import QPrintDialog, QPrinter, QPrintPreviewDialog
 from PySide6.QtWidgets import (QApplication, QComboBox, QDockWidget, QFileDialog,
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDockWidget, QFileDialog
                                QToolBar, QWidget)
 
 from ..core import annots as an
+from ..core import areaprint as ap
 from ..core import exporting, forms as fm, images as im, pageops, security
 from ..core import textedit as te
 from ..core.document import PasswordRequired, PdfDocument
@@ -130,6 +132,8 @@ class MainWindow(QMainWindow):
         self.act_close = A("close", "Belgeyi kapat", self.file_close, "Ctrl+W")
         self.act_print = A("print", "Yazdır…", self.file_print, "Ctrl+P")
         self.act_print_preview = A("print", "Baskı önizleme…", self.file_print_preview)
+        self.act_print_area = A("print-area", "Seçili alanı yazdır…",
+                                lambda: self.set_tool(Tool.PRINT_AREA), "Ctrl+Shift+P")
         self.act_quit = A("close", "Çıkış", self.close, "Ctrl+Q")
 
         self.act_undo = A("undo", "Geri al", self.edit_undo, "Ctrl+Z")
@@ -250,6 +254,7 @@ class MainWindow(QMainWindow):
             (Tool.REDACT, "redact", None),
             (Tool.ERASER, "trash", None),
             (Tool.CROP, "crop", "C"),
+            (Tool.PRINT_AREA, "print-area", None),
             (Tool.FORM_TEXT, "form", None),
             (Tool.FORM_CHECK, "check", None),
         ]
@@ -333,7 +338,7 @@ class MainWindow(QMainWindow):
                  Tool.NOTE, Tool.FREETEXT, None,
                  Tool.INK, Tool.RECT, Tool.ELLIPSE, Tool.LINE, Tool.ARROW, Tool.POLYGON,
                  None, Tool.IMAGE, Tool.SIGNATURE, Tool.STAMP, Tool.LINK, Tool.MEASURE,
-                 None, Tool.ERASE_AREA, Tool.REDACT, Tool.ERASER, Tool.CROP,
+                 None, Tool.ERASE_AREA, Tool.REDACT, Tool.ERASER, Tool.CROP, Tool.PRINT_AREA,
                  None, Tool.FORM_TEXT, Tool.FORM_CHECK]
         for tool in order:
             if tool is None:
@@ -373,6 +378,7 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addAction(self.act_print_preview)
         m.addAction(self.act_print)
+        m.addAction(self.act_print_area)
         m.addSeparator()
         m.addAction(self.act_close)
         m.addAction(self.act_quit)
@@ -562,6 +568,7 @@ class MainWindow(QMainWindow):
             Tool.IMAGE: "image", Tool.SIGNATURE: "signature", Tool.STAMP: "stamp",
             Tool.LINK: "link", Tool.MEASURE: "measure", Tool.ERASE_AREA: "eraser",
             Tool.REDACT: "redact", Tool.ERASER: "trash", Tool.CROP: "crop",
+            Tool.PRINT_AREA: "print-area",
             Tool.FORM_TEXT: "form", Tool.FORM_CHECK: "check",
         }
         for tool, n in tool_icons.items():
@@ -583,7 +590,7 @@ class MainWindow(QMainWindow):
     def _update_actions(self):
         opened = self.document.is_open
         for a in (self.act_save, self.act_save_as, self.act_close, self.act_print,
-                  self.act_print_preview, self.act_find, self.act_props,
+                  self.act_print_preview, self.act_print_area, self.act_find, self.act_props,
                   self.act_page_insert, self.act_page_delete, self.act_page_dup,
                   self.act_page_extract, self.act_merge, self.act_split,
                   self.act_watermark, self.act_pagenum, self.act_ocr,
@@ -829,6 +836,112 @@ class MainWindow(QMainWindow):
         d.paintRequested.connect(self._print_render)
         d.exec()
 
+    # ------------------------------------------------------- seçili alanı yazdır
+    AREA_MARK_MARGIN_PT = 7.5 * 72 / 25.4   # kesim işaretleri için kenar payı
+
+    def print_area(self, pno: int, rect):
+        """Çizilen alanı yazdırır ya da ayrı bir PDF olarak kaydeder."""
+        page = self.document.page(pno)
+        clip = ap.clamp_to_page(page, rect)
+        if clip.is_empty or clip.width < 2 or clip.height < 2:
+            self.statusBar().showMessage("Seçili alan çok küçük ya da sayfanın dışında", 4000)
+            return
+        d = dlg.AreaPrintDialog(self.document.page_count, pno,
+                                ap.area_size_pt(page, clip), self)
+        if not d.exec():
+            return
+        items = [(p, pymupdf.Rect(clip)) for p in d.pages()]
+        opts = d.options()
+
+        if d.action == d.PDF:
+            stem = os.path.splitext(self.document.display_name)[0]
+            start = os.path.join(self.settings_store.value("last_dir", ""),
+                                 f"{stem}_alan_s{pno + 1}.pdf")
+            path, _ = QFileDialog.getSaveFileName(self, "Alanı PDF olarak kaydet",
+                                                  start, PDF_FILTER)
+            if not path:
+                return
+            if not path.lower().endswith(".pdf"):
+                path += ".pdf"
+            try:
+                ap.export_area_pdf(self.document.doc, items, path)
+            except Exception as exc:
+                QMessageBox.critical(self, "Kaydedilemedi", str(exc))
+                return
+            self.statusBar().showMessage(f"Alan kaydedildi: {path}", 6000)
+            return
+
+        printer = QPrinter(QPrinter.HighResolution)
+        w, h = ap.area_size_pt(page, clip)
+        printer.setPageOrientation(QPageLayout.Landscape if w > h else QPageLayout.Portrait)
+        printer.setDocName(f"{self.document.display_name} — seçili alan")
+        preview = QPrintPreviewDialog(printer, self)
+        preview.setWindowTitle("Seçili alan — baskı önizleme")
+        preview.resize(1000, 800)
+        preview.paintRequested.connect(
+            lambda pr: self._print_area_render(pr, items, opts))
+        preview.exec()
+
+    def _print_area_render(self, printer: QPrinter, items, opts: dict) -> int:
+        """Alanları kâğıda çizer. Basılan kâğıt sayısını döndürür."""
+        painter = QPainter()
+        if not painter.begin(printer):
+            return 0
+        printed = 0
+        try:
+            res = float(printer.resolution() or 300)
+            to_px = res / 72.0
+            vp = painter.viewport()
+            paper_w, paper_h = vp.width() / to_px, vp.height() / to_px
+            pad = self.AREA_MARK_MARGIN_PT if opts.get("marks") else 0.0
+            for pno, rect in items:
+                page = self.document.page(pno)
+                clip = ap.clamp_to_page(page, rect)
+                if clip.is_empty:
+                    continue
+                aw, ah = ap.area_size_pt(page, clip)
+                x, y, w, h = ap.placement(
+                    aw, ah, paper_w - 2 * pad, paper_h - 2 * pad,
+                    mode=opts.get("mode", ap.FIT), scale=opts.get("scale", 1.0),
+                    center=opts.get("center", True),
+                    allow_upscale=opts.get("upscale", True))
+                x += pad
+                y += pad
+                # Çözünürlük kâğıttaki boyuta göre; bellek için 600 DPI ve
+                # ~80 megapiksel ile sınırlı.
+                dpi = min(res, 600.0) * (w / aw)
+                max_px = 80_000_000
+                if (aw * dpi / 72) * (ah * dpi / 72) > max_px:
+                    dpi = (max_px / (aw * ah)) ** 0.5 * 72
+                dpi = max(36.0, dpi)
+                pm = ap.render_area(page, clip, dpi)
+                img = QImage(pm.samples, pm.width, pm.height, pm.stride,
+                             QImage.Format_RGB888).copy()
+                if printed:
+                    printer.newPage()
+                target = QRectF(x * to_px, y * to_px, w * to_px, h * to_px)
+                painter.drawImage(target, img)
+                if opts.get("marks"):
+                    self._draw_cut_marks(painter, target, to_px)
+                printed += 1
+        finally:
+            painter.end()
+        return printed
+
+    @staticmethod
+    def _draw_cut_marks(painter: QPainter, r: QRectF, to_px: float) -> None:
+        mm = 72 / 25.4 * to_px
+        length, gap = 6 * mm, 1.5 * mm
+        pen = QPen(QColor(80, 80, 80))
+        pen.setWidthF(max(1.0, 0.3 * to_px))
+        painter.setPen(pen)
+        for cx, sx in ((r.left(), -1), (r.right(), 1)):
+            for cy, sy in ((r.top(), -1), (r.bottom(), 1)):
+                painter.drawLine(QPointF(cx + sx * gap, cy),
+                                 QPointF(cx + sx * (gap + length), cy))
+                painter.drawLine(QPointF(cx, cy + sy * gap),
+                                 QPointF(cx, cy + sy * (gap + length)))
+
     # ================================================================== düzen
     def edit_undo(self):
         label = self.document.undo()
@@ -1031,6 +1144,8 @@ class MainWindow(QMainWindow):
             elif tool == Tool.ERASE_AREA:
                 te.delete_text_region(self.document, pno, rect, remove_images=True,
                                       remove_graphics=True)
+            elif tool == Tool.PRINT_AREA:
+                self.print_area(pno, rect)
             elif tool == Tool.CROP:
                 pageops.crop_page(self.document, [pno], rect)
                 self.view.fit(self.view.fit_mode if self.view.fit_mode != "none"
@@ -1140,6 +1255,8 @@ class MainWindow(QMainWindow):
         m.addAction("Bu sayfayı sil", lambda: self._delete_pages([pno]))
         m.addAction("Bu sayfayı çoğalt", lambda: pageops.duplicate_pages(self.document,
                                                                         [pno]))
+        m.addSeparator()
+        m.addAction(self.act_print_area)
         m.addSeparator()
         m.addAction(self.act_fit_width)
         m.addAction(self.act_fit_page)
@@ -1731,6 +1848,7 @@ class MainWindow(QMainWindow):
             ("Ctrl+Z / Ctrl+Y", "Geri al / Yinele"),
             ("Ctrl+F / F3", "Bul / sonraki sonuç"),
             ("Ctrl+P", "Yazdır"),
+            ("Ctrl+Shift+P", "Seçili alanı yazdır"),
             ("Ctrl+= / Ctrl+-", "Yakınlaştır / uzaklaştır"),
             ("Ctrl+0 / 1 / 2", "%100 / genişliğe / sayfaya sığdır"),
             ("Ctrl+Fare tekerleği", "Sürekli yakınlaştırma"),
