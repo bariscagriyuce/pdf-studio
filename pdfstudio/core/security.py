@@ -3,22 +3,24 @@ from __future__ import annotations
 
 import pymupdf
 
+from ..i18n import N_, _
+
 PERMISSIONS = [
-    ("print", pymupdf.PDF_PERM_PRINT, "Yazdırma"),
-    ("modify", pymupdf.PDF_PERM_MODIFY, "İçeriği değiştirme"),
-    ("copy", pymupdf.PDF_PERM_COPY, "Metin/görüntü kopyalama"),
-    ("annotate", pymupdf.PDF_PERM_ANNOTATE, "Açıklama ekleme"),
-    ("form", pymupdf.PDF_PERM_FORM, "Form doldurma"),
-    ("accessibility", pymupdf.PDF_PERM_ACCESSIBILITY, "Erişilebilirlik için çıkarma"),
-    ("assemble", pymupdf.PDF_PERM_ASSEMBLE, "Sayfa düzenleme (birleştir/böl)"),
-    ("print_hq", pymupdf.PDF_PERM_PRINT_HQ, "Yüksek çözünürlüklü yazdırma"),
+    ("print", pymupdf.PDF_PERM_PRINT, N_("Yazdırma")),
+    ("modify", pymupdf.PDF_PERM_MODIFY, N_("İçeriği değiştirme")),
+    ("copy", pymupdf.PDF_PERM_COPY, N_("Metin/görüntü kopyalama")),
+    ("annotate", pymupdf.PDF_PERM_ANNOTATE, N_("Açıklama ekleme")),
+    ("form", pymupdf.PDF_PERM_FORM, N_("Form doldurma")),
+    ("accessibility", pymupdf.PDF_PERM_ACCESSIBILITY, N_("Erişilebilirlik için çıkarma")),
+    ("assemble", pymupdf.PDF_PERM_ASSEMBLE, N_("Sayfa düzenleme (birleştir/böl)")),
+    ("print_hq", pymupdf.PDF_PERM_PRINT_HQ, N_("Yüksek çözünürlüklü yazdırma")),
 ]
 
 METHODS = {
-    "AES-256 (en güçlü)": pymupdf.PDF_ENCRYPT_AES_256,
-    "AES-128": pymupdf.PDF_ENCRYPT_AES_128,
-    "RC4-128 (eski)": pymupdf.PDF_ENCRYPT_RC4_128,
-    "Şifreleme yok": pymupdf.PDF_ENCRYPT_NONE,
+    N_("AES-256 (en güçlü)"): pymupdf.PDF_ENCRYPT_AES_256,
+    N_("AES-128"): pymupdf.PDF_ENCRYPT_AES_128,
+    N_("RC4-128 (eski)"): pymupdf.PDF_ENCRYPT_RC4_128,
+    N_("Şifreleme yok"): pymupdf.PDF_ENCRYPT_NONE,
 }
 
 
@@ -52,7 +54,7 @@ def save_decrypted(document, path: str) -> str:
 def sanitize(document, *, remove_metadata: bool = True, remove_js: bool = True,
              remove_attachments: bool = False, remove_links: bool = False) -> None:
     """Gizlilik temizliği: meta veri, JavaScript, ekler ve bağlantılar."""
-    with document.edit("Belgeyi temizle", structural=True) as doc:
+    with document.edit(_("Belgeyi temizle"), structural=True) as doc:
         if remove_metadata:
             doc.set_metadata({})
             try:
@@ -95,25 +97,25 @@ def document_report(document) -> dict:
     total_words = 0
     for pno in range(document.page_count):
         page = doc[pno]
-        total_annots += sum(1 for _ in page.annots())
+        total_annots += sum(1 for _x in page.annots())
         total_images += len(page.get_images(full=True))
         total_words += len(page.get_text("words"))
     return {
-        "Dosya": document.path or "(kaydedilmedi)",
-        "Sayfa sayısı": document.page_count,
-        "PDF sürümü": meta.get("format", "?"),
-        "Başlık": meta.get("title", ""),
-        "Yazar": meta.get("author", ""),
-        "Konu": meta.get("subject", ""),
-        "Anahtar kelimeler": meta.get("keywords", ""),
-        "Üretici": meta.get("producer", ""),
-        "Oluşturan": meta.get("creator", ""),
-        "Oluşturma": meta.get("creationDate", ""),
-        "Değiştirme": meta.get("modDate", ""),
-        "Şifreli": "Evet" if document.is_encrypted() else "Hayır",
-        "Form içeriyor": "Evet" if doc.is_form_pdf else "Hayır",
-        "Açıklama sayısı": total_annots,
-        "Görüntü sayısı": total_images,
-        "Kelime sayısı": total_words,
-        "Yer imi sayısı": len(document.toc()),
+        N_("Dosya"): document.path or _("(kaydedilmedi)"),
+        N_("Sayfa sayısı"): document.page_count,
+        N_("PDF sürümü"): meta.get("format", "?"),
+        N_("Başlık"): meta.get("title", ""),
+        N_("Yazar"): meta.get("author", ""),
+        N_("Konu"): meta.get("subject", ""),
+        N_("Anahtar kelimeler"): meta.get("keywords", ""),
+        N_("Üretici"): meta.get("producer", ""),
+        N_("Oluşturan"): meta.get("creator", ""),
+        N_("Oluşturma"): meta.get("creationDate", ""),
+        N_("Değiştirme"): meta.get("modDate", ""),
+        N_("Şifreli"): _("Evet") if document.is_encrypted() else _("Hayır"),
+        N_("Form içeriyor"): _("Evet") if doc.is_form_pdf else _("Hayır"),
+        N_("Açıklama sayısı"): total_annots,
+        N_("Görüntü sayısı"): total_images,
+        N_("Kelime sayısı"): total_words,
+        N_("Yer imi sayısı"): len(document.toc()),
     }

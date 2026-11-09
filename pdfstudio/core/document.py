@@ -7,6 +7,7 @@ from contextlib import contextmanager
 import pymupdf
 from PySide6.QtCore import QObject, Signal
 
+from ..i18n import _
 from .history import History, Snapshot
 
 
@@ -71,11 +72,11 @@ class PdfDocument(QObject):
     def display_name(self) -> str:
         if self.path:
             return os.path.basename(self.path)
-        return "Adsız.pdf"
+        return _("Adsız.pdf")
 
     def page(self, index: int) -> pymupdf.Page:
         if not self._doc:
-            raise DocumentError("Açık belge yok")
+            raise DocumentError(_("Açık belge yok"))
         return self._doc[index]
 
     def page_size(self, index: int) -> tuple[float, float]:
@@ -93,7 +94,7 @@ class PdfDocument(QObject):
         if doc.needs_pass:
             if password is None or not doc.authenticate(password):
                 doc.close()
-                raise PasswordRequired("Belge parola korumalı")
+                raise PasswordRequired(_("Belge parola korumalı"))
         self._install(doc, path)
         self.password = password
 
@@ -104,7 +105,7 @@ class PdfDocument(QObject):
 
     def new_blank(self, width: float = 595.0, height: float = 842.0, pages: int = 1) -> None:
         doc = pymupdf.open()
-        for _ in range(max(1, pages)):
+        for _x in range(max(1, pages)):
             doc.new_page(width=width, height=height)
         self._install(doc, None)
         self.set_dirty(True)
@@ -150,10 +151,10 @@ class PdfDocument(QObject):
     # --------------------------------------------------------------- kaydetme
     def save(self, path: str | None = None, **opts) -> str:
         if not self._doc:
-            raise DocumentError("Açık belge yok")
+            raise DocumentError(_("Açık belge yok"))
         target = path or self.path
         if not target:
-            raise DocumentError("Hedef dosya belirtilmedi")
+            raise DocumentError(_("Hedef dosya belirtilmedi"))
 
         same_file = self.path is not None and os.path.abspath(target) == os.path.abspath(self.path)
         kwargs = dict(garbage=4, deflate=True, clean=True)
@@ -194,8 +195,8 @@ class PdfDocument(QObject):
                 page.add_highlight_annot(...)
         """
         if not self._doc:
-            raise DocumentError("Açık belge yok")
-        before = self.snapshot(label, pages[0] if pages else 0)
+            raise DocumentError(_("Açık belge yok"))
+        before = self.snapshot(_(label), pages[0] if pages else 0)
         try:
             yield self._doc
         except Exception:
@@ -244,14 +245,14 @@ class PdfDocument(QObject):
         return dict(self._doc.metadata or {}) if self._doc else {}
 
     def set_metadata(self, meta: dict) -> None:
-        with self.edit("Meta veri", structural=True):
+        with self.edit(_("Meta veri"), structural=True):
             self._doc.set_metadata(meta)
 
     def toc(self) -> list:
         return self._doc.get_toc(simple=False) if self._doc else []
 
     def set_toc(self, toc: list) -> None:
-        with self.edit("Yer imleri", structural=True):
+        with self.edit(_("Yer imleri"), structural=True):
             self._doc.set_toc(toc)
 
     def permissions(self) -> int:

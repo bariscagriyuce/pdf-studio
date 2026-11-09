@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import pymupdf
 
+from ..i18n import N_, _
+
 MARKUP_ADDERS = {
     "highlight": "add_highlight_annot",
     "underline": "add_underline_annot",
@@ -13,23 +15,23 @@ MARKUP_ADDERS = {
 }
 
 TYPE_NAMES = {
-    pymupdf.PDF_ANNOT_TEXT: "Yapışkan not",
-    pymupdf.PDF_ANNOT_FREE_TEXT: "Serbest metin",
-    pymupdf.PDF_ANNOT_LINE: "Çizgi",
-    pymupdf.PDF_ANNOT_SQUARE: "Dikdörtgen",
-    pymupdf.PDF_ANNOT_CIRCLE: "Elips",
-    pymupdf.PDF_ANNOT_POLYGON: "Çokgen",
-    pymupdf.PDF_ANNOT_POLY_LINE: "Çoklu çizgi",
-    pymupdf.PDF_ANNOT_HIGHLIGHT: "Vurgu",
-    pymupdf.PDF_ANNOT_UNDERLINE: "Altı çizili",
-    pymupdf.PDF_ANNOT_SQUIGGLY: "Dalgalı",
-    pymupdf.PDF_ANNOT_STRIKE_OUT: "Üstü çizili",
-    pymupdf.PDF_ANNOT_STAMP: "Damga",
-    pymupdf.PDF_ANNOT_CARET: "Şapka",
-    pymupdf.PDF_ANNOT_INK: "Serbest çizim",
-    pymupdf.PDF_ANNOT_FILE_ATTACHMENT: "Dosya eki",
-    pymupdf.PDF_ANNOT_REDACT: "Karartma",
-    pymupdf.PDF_ANNOT_WIDGET: "Form alanı",
+    pymupdf.PDF_ANNOT_TEXT: N_("Yapışkan not"),
+    pymupdf.PDF_ANNOT_FREE_TEXT: N_("Serbest metin"),
+    pymupdf.PDF_ANNOT_LINE: N_("Çizgi"),
+    pymupdf.PDF_ANNOT_SQUARE: N_("Dikdörtgen"),
+    pymupdf.PDF_ANNOT_CIRCLE: N_("Elips"),
+    pymupdf.PDF_ANNOT_POLYGON: N_("Çokgen"),
+    pymupdf.PDF_ANNOT_POLY_LINE: N_("Çoklu çizgi"),
+    pymupdf.PDF_ANNOT_HIGHLIGHT: N_("Vurgu"),
+    pymupdf.PDF_ANNOT_UNDERLINE: N_("Altı çizili"),
+    pymupdf.PDF_ANNOT_SQUIGGLY: N_("Dalgalı"),
+    pymupdf.PDF_ANNOT_STRIKE_OUT: N_("Üstü çizili"),
+    pymupdf.PDF_ANNOT_STAMP: N_("Damga"),
+    pymupdf.PDF_ANNOT_CARET: N_("Şapka"),
+    pymupdf.PDF_ANNOT_INK: N_("Serbest çizim"),
+    pymupdf.PDF_ANNOT_FILE_ATTACHMENT: N_("Dosya eki"),
+    pymupdf.PDF_ANNOT_REDACT: N_("Karartma"),
+    pymupdf.PDF_ANNOT_WIDGET: N_("Form alanı"),
 }
 
 STAMP_TEXTS = [
@@ -61,7 +63,7 @@ def list_annots(document, pno: int) -> list[AnnotInfo]:
         info = a.info or {}
         out.append(AnnotInfo(
             pno=pno, xref=a.xref, type_id=a.type[0],
-            type_name=TYPE_NAMES.get(a.type[0], a.type[1]),
+            type_name=_(TYPE_NAMES.get(a.type[0], a.type[1])),
             rect=pymupdf.Rect(a.rect),
             author=info.get("title", ""), content=info.get("content", ""),
             modified=info.get("modDate", ""),
@@ -124,8 +126,8 @@ def _finish(annot, *, color=None, fill=None, opacity=1.0, width=None,
 def add_markup(document, pno: int, kind: str, quads, *, color=(1, 0.85, 0.2),
                opacity: float = 1.0, author: str = "", content: str = ""):
     method = MARKUP_ADDERS[kind]
-    with document.edit({"highlight": "Vurgu", "underline": "Altını çiz",
-                        "strikeout": "Üstünü çiz", "squiggly": "Dalgalı çizgi"}[kind],
+    with document.edit({"highlight": _("Vurgu"), "underline": _("Altını çiz"),
+                        "strikeout": _("Üstünü çiz"), "squiggly": _("Dalgalı çizgi")}[kind],
                        pages=[pno]) as doc:
         page = doc[pno]
         annot = getattr(page, method)(list(quads))
@@ -135,7 +137,7 @@ def add_markup(document, pno: int, kind: str, quads, *, color=(1, 0.85, 0.2),
 # ------------------------------------------------------------------ metin notu
 def add_sticky_note(document, pno: int, point, text: str, *, icon: str = "Note",
                     color=(1, 0.85, 0.3), author: str = ""):
-    with document.edit("Yapışkan not", pages=[pno]) as doc:
+    with document.edit(_("Yapışkan not"), pages=[pno]) as doc:
         annot = doc[pno].add_text_annot(pymupdf.Point(point), text, icon=icon)
         _finish(annot, color=color, author=author, content=text)
 
@@ -144,7 +146,7 @@ def add_free_text(document, pno: int, rect, text: str, *, fontsize: float = 12,
                   fontname: str = "helv", text_color=(0, 0, 0), fill_color=None,
                   border_color=None, border_width: float = 0.0, align: int = 0,
                   opacity: float = 1.0, author: str = "", rotate: int = 0):
-    with document.edit("Serbest metin kutusu", pages=[pno]) as doc:
+    with document.edit(_("Serbest metin kutusu"), pages=[pno]) as doc:
         annot = doc[pno].add_freetext_annot(
             pymupdf.Rect(rect), text, fontsize=fontsize, fontname=fontname,
             text_color=text_color, fill_color=fill_color, border_color=border_color,
@@ -164,7 +166,7 @@ def add_ink(document, pno: int, strokes: list[list[tuple]], *, color=(0.9, 0.1, 
             for stroke in strokes if len(stroke) > 1]
     if not hand:
         return
-    with document.edit("Serbest çizim", pages=[pno]) as doc:
+    with document.edit(_("Serbest çizim"), pages=[pno]) as doc:
         annot = doc[pno].add_ink_annot(hand)
         _finish(annot, color=color, width=width, opacity=opacity, author=author)
 
@@ -175,8 +177,8 @@ def add_shape(document, pno: int, kind: str, p0, p1, *, color=(0.85, 0.1, 0.1),
     """kind: rect | ellipse | line | arrow | double_arrow"""
     r = pymupdf.Rect(min(p0[0], p1[0]), min(p0[1], p1[1]),
                      max(p0[0], p1[0]), max(p0[1], p1[1]))
-    label = {"rect": "Dikdörtgen", "ellipse": "Elips", "line": "Çizgi",
-             "arrow": "Ok", "double_arrow": "Çift ok"}.get(kind, "Şekil")
+    label = {"rect": _("Dikdörtgen"), "ellipse": _("Elips"), "line": _("Çizgi"),
+             "arrow": _("Ok"), "double_arrow": _("Çift ok")}.get(kind, "Şekil")
     with document.edit(label, pages=[pno]) as doc:
         page = doc[pno]
         if kind == "rect":
@@ -201,7 +203,7 @@ def add_polygon(document, pno: int, points: list[tuple], *, closed: bool = True,
     pts = [pymupdf.Point(p) for p in points]
     if len(pts) < 2:
         return
-    with document.edit("Çokgen" if closed else "Çoklu çizgi", pages=[pno]) as doc:
+    with document.edit(_("Çokgen") if closed else _("Çoklu çizgi"), pages=[pno]) as doc:
         page = doc[pno]
         annot = page.add_polygon_annot(pts) if closed else page.add_polyline_annot(pts)
         _finish(annot, color=color, fill=fill, width=width, opacity=opacity, author=author)
@@ -209,13 +211,13 @@ def add_polygon(document, pno: int, points: list[tuple], *, closed: bool = True,
 
 def add_stamp(document, pno: int, rect, stamp_index: int = 0, *, color=(0.1, 0.4, 0.1),
               opacity: float = 1.0, author: str = ""):
-    with document.edit("Damga", pages=[pno]) as doc:
+    with document.edit(_("Damga"), pages=[pno]) as doc:
         annot = doc[pno].add_stamp_annot(pymupdf.Rect(rect), stamp=stamp_index)
         _finish(annot, color=color, opacity=opacity, author=author)
 
 
 def add_caret(document, pno: int, rect, *, color=(0.1, 0.3, 0.9), author: str = ""):
-    with document.edit("Şapka işareti", pages=[pno]) as doc:
+    with document.edit(_("Şapka işareti"), pages=[pno]) as doc:
         _finish(doc[pno].add_caret_annot(pymupdf.Rect(rect).tl), color=color, author=author)
 
 
@@ -224,14 +226,14 @@ def add_file_attachment(document, pno: int, point, path: str, *, author: str = "
     with open(path, "rb") as fh:
         data = fh.read()
     name = os.path.basename(path)
-    with document.edit("Dosya eki", pages=[pno]) as doc:
+    with document.edit(_("Dosya eki"), pages=[pno]) as doc:
         annot = doc[pno].add_file_annot(pymupdf.Point(point), data, name, desc=name)
         _finish(annot, author=author, content=name)
 
 
 # ------------------------------------------------------------------ bağlantı
 def add_link(document, pno: int, rect, *, uri: str = "", target_page: int | None = None):
-    with document.edit("Bağlantı ekle", pages=[pno]) as doc:
+    with document.edit(_("Bağlantı ekle"), pages=[pno]) as doc:
         page = doc[pno]
         if uri:
             page.insert_link({"kind": pymupdf.LINK_URI, "from": pymupdf.Rect(rect), "uri": uri})
@@ -250,7 +252,7 @@ def list_links(document, pno: int) -> list[dict]:
 
 
 def delete_link(document, pno: int, rect) -> None:
-    with document.edit("Bağlantıyı sil", pages=[pno]) as doc:
+    with document.edit(_("Bağlantıyı sil"), pages=[pno]) as doc:
         page = doc[pno]
         target = pymupdf.Rect(rect)
         for link in page.get_links():
@@ -260,7 +262,7 @@ def delete_link(document, pno: int, rect) -> None:
 
 # ------------------------------------------------------------------ düzenleme
 def delete_annot(document, pno: int, xref: int) -> None:
-    with document.edit("Açıklamayı sil", pages=[pno]) as doc:
+    with document.edit(_("Açıklamayı sil"), pages=[pno]) as doc:
         page = doc[pno]
         for a in page.annots():
             if a.xref == xref:
@@ -272,7 +274,7 @@ def delete_annots(document, items: list[tuple[int, int]]) -> None:
     by_page: dict[int, set[int]] = {}
     for pno, xref in items:
         by_page.setdefault(pno, set()).add(xref)
-    with document.edit("Açıklamaları sil", structural=True) as doc:
+    with document.edit(_("Açıklamaları sil"), structural=True) as doc:
         for pno, xrefs in by_page.items():
             page = doc[pno]
             for a in list(page.annots()):
@@ -283,7 +285,7 @@ def delete_annots(document, items: list[tuple[int, int]]) -> None:
 def clear_annots(document, pages: list[int] | None = None) -> int:
     rng = pages if pages is not None else range(document.page_count)
     n = 0
-    with document.edit("Tüm açıklamaları kaldır", structural=True) as doc:
+    with document.edit(_("Tüm açıklamaları kaldır"), structural=True) as doc:
         for pno in rng:
             page = doc[pno]
             for a in list(page.annots()):
@@ -294,7 +296,7 @@ def clear_annots(document, pages: list[int] | None = None) -> int:
 
 def update_annot(document, pno: int, xref: int, *, content=None, author=None,
                  color=None, fill=None, opacity=None, width=None, rect=None) -> None:
-    with document.edit("Açıklamayı düzenle", pages=[pno]) as doc:
+    with document.edit(_("Açıklamayı düzenle"), pages=[pno]) as doc:
         page = doc[pno]
         for a in page.annots():
             if a.xref != xref:
@@ -308,7 +310,7 @@ def update_annot(document, pno: int, xref: int, *, content=None, author=None,
 
 
 def move_annot(document, pno: int, xref: int, dx: float, dy: float) -> None:
-    with document.edit("Açıklamayı taşı", pages=[pno]) as doc:
+    with document.edit(_("Açıklamayı taşı"), pages=[pno]) as doc:
         for a in doc[pno].annots():
             if a.xref == xref:
                 r = pymupdf.Rect(a.rect) + (dx, dy, dx, dy)
@@ -319,12 +321,12 @@ def move_annot(document, pno: int, xref: int, dx: float, dy: float) -> None:
 
 def flatten(document, *, annots: bool = True, widgets: bool = True) -> None:
     """Açıklamaları/form alanlarını sayfa içeriğine gömer (düzenlenemez hale getirir)."""
-    with document.edit("Düzleştir", structural=True) as doc:
+    with document.edit(_("Düzleştir"), structural=True) as doc:
         doc.bake(annots=annots, widgets=widgets)
 
 
 # ---------------------------------------------------------------------- imza
-def place_image(document, pno: int, rect, image_path: str, *, label: str = "Görüntü ekle",
+def place_image(document, pno: int, rect, image_path: str, *, label: str = N_("Görüntü ekle"),
                 keep_proportion: bool = True, overlay: bool = True, rotate: int = 0):
     with document.edit(label, pages=[pno]) as doc:
         doc[pno].insert_image(pymupdf.Rect(rect), filename=image_path,
@@ -332,7 +334,7 @@ def place_image(document, pno: int, rect, image_path: str, *, label: str = "Gör
                               rotate=rotate, alpha=-1)
 
 
-def place_image_bytes(document, pno: int, rect, data: bytes, *, label: str = "İmza ekle",
+def place_image_bytes(document, pno: int, rect, data: bytes, *, label: str = N_("İmza ekle"),
                       keep_proportion: bool = True, overlay: bool = True):
     with document.edit(label, pages=[pno]) as doc:
         doc[pno].insert_image(pymupdf.Rect(rect), stream=data,

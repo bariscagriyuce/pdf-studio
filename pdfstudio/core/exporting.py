@@ -6,13 +6,15 @@ import shutil
 
 import pymupdf
 
+from ..i18n import N_, _
+
 TEXT_MODES = {
-    "Düz metin (.txt)": ("text", "txt"),
-    "HTML (.html)": ("html", "html"),
-    "XHTML (.xhtml)": ("xhtml", "xhtml"),
-    "XML (.xml)": ("xml", "xml"),
-    "JSON (.json)": ("json", "json"),
-    "Markdown benzeri (.md)": ("text", "md"),
+    N_("Düz metin (.txt)"): ("text", "txt"),
+    N_("HTML (.html)"): ("html", "html"),
+    N_("XHTML (.xhtml)"): ("xhtml", "xhtml"),
+    N_("XML (.xml)"): ("xml", "xml"),
+    N_("JSON (.json)"): ("json", "json"),
+    N_("Markdown benzeri (.md)"): ("text", "md"),
 }
 
 IMAGE_FORMATS = ["png", "jpg", "webp", "ppm", "pnm"]
@@ -55,7 +57,7 @@ def export_text(document, path: str, *, mode: str = "text", pages: list[int] | N
     for pno in rng:
         txt = document.page(pno).get_text(mode)
         if separator and mode in ("text",):
-            chunks.append(f"\n----- Sayfa {pno + 1} -----\n{txt}")
+            chunks.append(_("\n----- Sayfa {0} -----\n{txt}").format(pno + 1, txt=txt))
         else:
             chunks.append(txt)
     body = "".join(chunks)
@@ -103,7 +105,7 @@ def tesseract_available() -> tuple[bool, str]:
     exe = shutil.which("tesseract")
     tessdata = os.environ.get("TESSDATA_PREFIX", "")
     if not exe:
-        return False, "tesseract bulunamadı (Linux: 'tesseract' + 'tesseract-data-tur', Windows: Tesseract-OCR kurulumu)"
+        return False, _("tesseract bulunamadı (Linux: 'tesseract' + 'tesseract-data-tur', Windows: Tesseract-OCR kurulumu)")
     if not tessdata:
         for cand in ("/usr/share/tessdata", "/usr/share/tesseract-ocr/5/tessdata",
                      "/usr/local/share/tessdata",
@@ -113,7 +115,7 @@ def tesseract_available() -> tuple[bool, str]:
                 tessdata = cand
                 break
     if not tessdata:
-        return False, "TESSDATA_PREFIX ayarlanmamış"
+        return False, _("TESSDATA_PREFIX ayarlanmamış")
     return True, tessdata
 
 
@@ -143,15 +145,12 @@ def ocr_pages(document, pages: list[int] | None = None, *, language: str = "tur+
         raise RuntimeError(msg)
     missing = check_languages(language)
     if missing:
-        have = ", ".join(available_languages()) or "(hiçbiri)"
+        have = ", ".join(available_languages()) or _("(hiçbiri)")
         raise RuntimeError(
-            f"Dil verisi eksik: {', '.join(missing)}.\nKurulu diller: {have}\n\n"
-            "Linux: sudo pacman -S tesseract-data-tur tesseract-data-eng\n"
-            "  (Debian/Ubuntu: sudo apt install tesseract-ocr-tur tesseract-ocr-eng)\n"
-            "Windows: Tesseract kurulumunda ilgili dil paketlerini seçin.")
+            _("Dil verisi eksik: {0}.\nKurulu diller: {have}\n\nLinux: sudo pacman -S tesseract-data-tur tesseract-data-eng\n  (Debian/Ubuntu: sudo apt install tesseract-ocr-tur tesseract-ocr-eng)\nWindows: Tesseract kurulumunda ilgili dil paketlerini seçin.").format(', '.join(missing), have=have))
     rng = list(pages if pages is not None else range(document.page_count))
     done = 0
-    with document.edit("OCR uygula", structural=True) as doc:
+    with document.edit(_("OCR uygula"), structural=True) as doc:
         src = pymupdf.open("pdf", doc.tobytes())
         for i, pno in enumerate(rng):
             page = src[pno]
@@ -174,7 +173,7 @@ def ocr_page_text(document, pno: int, *, language: str = "tur+eng", dpi: int = 3
         raise RuntimeError(msg)
     missing = check_languages(language)
     if missing:
-        raise RuntimeError(f"Dil verisi eksik: {', '.join(missing)}")
+        raise RuntimeError(_("Dil verisi eksik: {0}").format(', '.join(missing)))
     page = document.page(pno)
     tp = page.get_textpage_ocr(language=language, dpi=dpi, full=True,
                                tessdata=os.environ["TESSDATA_PREFIX"])

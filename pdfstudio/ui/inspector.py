@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QComboBox, QDoubleSpinBox, QHBoxLayout, QLabel,
                                QLineEdit, QPlainTextEdit, QPushButton, QScrollArea,
                                QSizePolicy, QToolButton, QVBoxLayout, QWidget)
 
+from ..i18n import N_, _
 from ..core import annots as an
 from .tools import TOOL_HINTS, TOOL_LABELS, LINE_TOOLS, MARKUP_TOOLS, RECT_TOOLS, Tool
 from .widgets import ColorButton, LabeledSlider, Section, font_combo
@@ -34,7 +35,7 @@ class Inspector(QScrollArea):
         lay.setContentsMargins(9, 9, 9, 9)
         lay.setSpacing(9)
 
-        self.title = QLabel("Seç / Düzenle")
+        self.title = QLabel(_("Seç / Düzenle"))
         self.title.setProperty("title", True)
         lay.addWidget(self.title)
         self.hint = QLabel("")
@@ -43,7 +44,7 @@ class Inspector(QScrollArea):
         lay.addWidget(self.hint)
 
         # ---------------- görünüm ayarları
-        self.appearance = Section("Görünüm")
+        self.appearance = Section(_("Görünüm"))
         self.color_btn = ColorButton(self.settings.color)
         self.fill_btn = ColorButton(self.settings.fill, allow_none=True)
         self.width_spin = QDoubleSpinBox()
@@ -52,14 +53,14 @@ class Inspector(QScrollArea):
         self.width_spin.setValue(self.settings.width)
         self.width_spin.setSuffix(" pt")
         self.opacity = LabeledSlider(5, 100, 100)
-        self.appearance.add_row("Çizgi rengi", self.color_btn)
-        self.appearance.add_row("Dolgu", self.fill_btn)
-        self.appearance.add_row("Kalınlık", self.width_spin)
-        self.appearance.add_row("Saydamlık", self.opacity)
+        self.appearance.add_row(_("Çizgi rengi"), self.color_btn)
+        self.appearance.add_row(_("Dolgu"), self.fill_btn)
+        self.appearance.add_row(_("Kalınlık"), self.width_spin)
+        self.appearance.add_row(_("Saydamlık"), self.opacity)
         lay.addWidget(self.appearance)
 
         # ---------------- yazı ayarları
-        self.typography = Section("Yazı")
+        self.typography = Section(_("Yazı"))
         self.font_box = font_combo(self.settings.font_family)
         self.size_spin = QDoubleSpinBox()
         self.size_spin.setRange(3.0, 300.0)
@@ -78,7 +79,7 @@ class Inspector(QScrollArea):
         self.italic_btn.setCheckable(True)
         self.italic_btn.setStyleSheet("font-style:italic; min-width:26px;")
         self.align_box = QComboBox()
-        self.align_box.addItems(["Sola", "Ortala", "Sağa", "İki yana"])
+        self.align_box.addItems([_("Sola"), _("Ortala"), _("Sağa"), _("İki yana")])
         srl.addWidget(self.bold_btn)
         srl.addWidget(self.italic_btn)
         srl.addWidget(self.align_box, 1)
@@ -87,36 +88,36 @@ class Inspector(QScrollArea):
         self.spacing_spin.setRange(0.7, 3.0)
         self.spacing_spin.setSingleStep(0.05)
         self.spacing_spin.setValue(self.settings.line_spacing)
-        self.typography.add_row("Yazı tipi", self.font_box)
-        self.typography.add_row("Punto", self.size_spin)
-        self.typography.add_row("Stil", style_row)
-        self.typography.add_row("Metin rengi", self.text_color)
-        self.typography.add_row("Satır aralığı", self.spacing_spin)
+        self.typography.add_row(_("Yazı tipi"), self.font_box)
+        self.typography.add_row(_("Punto"), self.size_spin)
+        self.typography.add_row(_("Stil"), style_row)
+        self.typography.add_row(_("Metin rengi"), self.text_color)
+        self.typography.add_row(_("Satır aralığı"), self.spacing_spin)
         lay.addWidget(self.typography)
 
         # ---------------- araca özel
-        self.extra = Section("Araç ayarları")
+        self.extra = Section(_("Araç ayarları"))
         self.note_icon = QComboBox()
         self.note_icon.addItems(["Note", "Comment", "Help", "Insert", "Key", "NewParagraph",
                                  "Paragraph"])
         self.stamp_box = QComboBox()
         self.stamp_box.addItems(an.STAMP_TEXTS)
         self.author_edit = QLineEdit(self.settings.author)
-        self.author_edit.setPlaceholderText("Adınız")
-        self.image_btn = QPushButton("Görüntü seç…")
-        self.sign_btn = QPushButton("İmza oluştur / seç…")
-        self.extra.add_row("Not simgesi", self.note_icon)
-        self.extra.add_row("Damga", self.stamp_box)
-        self.extra.add_row("Yazar", self.author_edit)
+        self.author_edit.setPlaceholderText(_("Adınız"))
+        self.image_btn = QPushButton(_("Görüntü seç…"))
+        self.sign_btn = QPushButton(_("İmza oluştur / seç…"))
+        self.extra.add_row(_("Not simgesi"), self.note_icon)
+        self.extra.add_row(_("Damga"), self.stamp_box)
+        self.extra.add_row(_("Yazar"), self.author_edit)
         self.extra.add_widget(self.image_btn)
         self.extra.add_widget(self.sign_btn)
         lay.addWidget(self.extra)
 
         # ---------------- seçili nesne
-        self.object_box = Section("Seçili nesne")
+        self.object_box = Section(_("Seçili nesne"))
         self.obj_type = QLabel("—")
         self.obj_content = QPlainTextEdit()
-        self.obj_content.setPlaceholderText("Açıklama içeriği / not metni")
+        self.obj_content.setPlaceholderText(_("Açıklama içeriği / not metni"))
         self.obj_content.setMaximumHeight(90)
         self.obj_author = QLineEdit()
         self.obj_color = ColorButton((1, 0, 0))
@@ -142,24 +143,24 @@ class Inspector(QScrollArea):
         srl2.setSpacing(4)
         srl2.addWidget(self.obj_w)
         srl2.addWidget(self.obj_h)
-        self.apply_btn = QPushButton("Değişiklikleri uygula")
+        self.apply_btn = QPushButton(_("Değişiklikleri uygula"))
         self.apply_btn.setProperty("accent", True)
-        self.delete_btn = QPushButton("Nesneyi sil")
+        self.delete_btn = QPushButton(_("Nesneyi sil"))
         self.delete_btn.setProperty("danger", True)
-        self.object_box.add_row("Tür", self.obj_type)
-        self.object_box.add_row("İçerik", self.obj_content)
-        self.object_box.add_row("Yazar", self.obj_author)
-        self.object_box.add_row("Renk", self.obj_color)
-        self.object_box.add_row("Dolgu", self.obj_fill)
-        self.object_box.add_row("Saydamlık", self.obj_opacity)
-        self.object_box.add_row("Konum X/Y", pos_row)
-        self.object_box.add_row("Boyut G/Y", size_row)
+        self.object_box.add_row(_("Tür"), self.obj_type)
+        self.object_box.add_row(_("İçerik"), self.obj_content)
+        self.object_box.add_row(_("Yazar"), self.obj_author)
+        self.object_box.add_row(_("Renk"), self.obj_color)
+        self.object_box.add_row(_("Dolgu"), self.obj_fill)
+        self.object_box.add_row(_("Saydamlık"), self.obj_opacity)
+        self.object_box.add_row(_("Konum X/Y"), pos_row)
+        self.object_box.add_row(_("Boyut G/Y"), size_row)
         self.object_box.add_widget(self.apply_btn)
         self.object_box.add_widget(self.delete_btn)
         lay.addWidget(self.object_box)
 
         # ---------------- sayfa bilgisi
-        self.page_box = Section("Sayfa")
+        self.page_box = Section(_("Sayfa"))
         self.page_info = QLabel("—")
         self.page_info.setWordWrap(True)
         self.page_box.add_widget(self.page_info)
@@ -198,7 +199,7 @@ class Inspector(QScrollArea):
         self.apply_btn.clicked.connect(self._apply_object)
         self.delete_btn.clicked.connect(lambda: self.actionRequested.emit("delete_object"))
 
-    def _push(self, *_):
+    def _push(self, *_x):
         if self._loading:
             return
         s = self.settings
@@ -227,8 +228,8 @@ class Inspector(QScrollArea):
     # ------------------------------------------------------------------ araç
     def set_tool(self, tool: Tool):
         self._loading = True
-        self.title.setText(TOOL_LABELS.get(tool, "Araç"))
-        self.hint.setText(TOOL_HINTS.get(tool, ""))
+        self.title.setText(_(TOOL_LABELS.get(tool, N_("Araç"))))
+        self.hint.setText(_(TOOL_HINTS.get(tool, "")))
         self.hint.setVisible(bool(TOOL_HINTS.get(tool)))
 
         show_appearance = tool in (RECT_TOOLS | LINE_TOOLS | MARKUP_TOOLS |
@@ -263,7 +264,7 @@ class Inspector(QScrollArea):
             return
         self._loading = True
         pno, kind, rect, ref = obj
-        names = {"annot": "Açıklama", "image": "Görüntü", "widget": "Form alanı"}
+        names = {"annot": _("Açıklama"), "image": _("Görüntü"), "widget": _("Form alanı")}
         detail = names.get(kind, kind)
         content = author = ""
         color = (1, 0, 0)
@@ -272,7 +273,7 @@ class Inspector(QScrollArea):
         if kind == "annot":
             for a in an.list_annots(self.view.document, pno):
                 if a.xref == ref:
-                    detail = f"Açıklama · {a.type_name}"
+                    detail = _("Açıklama · {0}").format(a.type_name)
                     content, author = a.content, a.author
                     break
             try:
@@ -292,7 +293,7 @@ class Inspector(QScrollArea):
             from ..core import forms as fm
             for f in fm.list_fields(self.view.document, pno):
                 if f.xref == ref:
-                    detail = f"Form · {f.type_name}"
+                    detail = _("Form · {0}").format(f.type_name)
                     content = f.value
                     break
         self.obj_type.setText(detail)
@@ -341,10 +342,5 @@ class Inspector(QScrollArea):
         r = page.rect
         mm = 25.4 / 72
         self.page_info.setText(
-            f"Sayfa {pno + 1} / {doc.page_count}\n"
-            f"Boyut: {r.width:.0f} × {r.height:.0f} pt "
-            f"({r.width * mm:.0f} × {r.height * mm:.0f} mm)\n"
-            f"Dönüş: {page.rotation}°\n"
-            f"Açıklama: {sum(1 for _ in page.annots())} · "
-            f"Görüntü: {len(page.get_images())}"
+            _("Sayfa {0} / {1}\nBoyut: {2:.0f} × {3:.0f} pt ({4:.0f} × {5:.0f} mm)\nDönüş: {6}°\nAçıklama: {7} · Görüntü: {8}").format(pno + 1, doc.page_count, r.width, r.height, r.width * mm, r.height * mm, page.rotation, sum(1 for _x in page.annots()), len(page.get_images()))
         )

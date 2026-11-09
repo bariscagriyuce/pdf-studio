@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QColorDialog, QComboBox, QFormLayout, QFrame, QHB
                                QLabel, QPushButton, QSizePolicy, QSlider, QToolButton,
                                QVBoxLayout, QWidget)
 
+from ..i18n import _
 from . import icons
 
 
@@ -63,7 +64,7 @@ class ColorButton(QPushButton):
     def _pick(self):
         start = rgb_to_qcolor(self._color) if self._color else QColor("#ffffff")
         dlg = QColorDialog(start, self)
-        dlg.setWindowTitle("Renk seç")
+        dlg.setWindowTitle(_("Renk seç"))
         if self.allow_none:
             dlg.setOption(QColorDialog.ShowAlphaChannel, False)
         if dlg.exec():

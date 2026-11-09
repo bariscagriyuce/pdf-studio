@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 import pymupdf
 
+from ..i18n import _
+
 
 @dataclass
 class ImageInfo:
@@ -86,7 +88,7 @@ def extract_all_images(document, out_dir: str, *, min_side: int = 8) -> list[str
 
 def delete_image(document, pno: int, rect) -> None:
     """Görüntüyü sayfadan gerçekten kaldırır (redaksiyon ile)."""
-    with document.edit("Görüntüyü sil", pages=[pno]) as doc:
+    with document.edit(_("Görüntüyü sil"), pages=[pno]) as doc:
         page = doc[pno]
         page.add_redact_annot(pymupdf.Rect(rect) + (-0.5, -0.5, 0.5, 0.5), fill=None,
                               cross_out=False)
@@ -96,7 +98,7 @@ def delete_image(document, pno: int, rect) -> None:
 
 
 def replace_image(document, pno: int, rect, new_path: str, *, keep_proportion: bool = True) -> None:
-    with document.edit("Görüntüyü değiştir", pages=[pno]) as doc:
+    with document.edit(_("Görüntüyü değiştir"), pages=[pno]) as doc:
         page = doc[pno]
         box = pymupdf.Rect(rect)
         page.add_redact_annot(box + (-0.5, -0.5, 0.5, 0.5), fill=None, cross_out=False)
@@ -118,7 +120,7 @@ def move_resize_image(document, pno: int, old_rect, new_rect, *,
         blob = None
     if blob is None:
         return
-    with document.edit("Görüntüyü taşı/boyutlandır", pages=[pno]) as doc:
+    with document.edit(_("Görüntüyü taşı/boyutlandır"), pages=[pno]) as doc:
         page = doc[pno]
         page.add_redact_annot(old + (-0.5, -0.5, 0.5, 0.5), fill=None, cross_out=False)
         page.apply_redactions(images=pymupdf.PDF_REDACT_IMAGE_REMOVE,

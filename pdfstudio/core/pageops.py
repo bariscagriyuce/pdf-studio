@@ -5,6 +5,8 @@ import os
 
 import pymupdf
 
+from ..i18n import _
+
 PAGE_PRESETS = {
     "A4 (595 x 842)": (595.0, 842.0),
     "A3 (842 x 1191)": (842.0, 1191.0),
@@ -17,14 +19,14 @@ PAGE_PRESETS = {
 
 # --------------------------------------------------------------------- ekleme
 def insert_blank(document, index: int, width: float, height: float, count: int = 1) -> None:
-    with document.edit("Boş sayfa ekle", structural=True) as doc:
+    with document.edit(_("Boş sayfa ekle"), structural=True) as doc:
         for i in range(count):
             doc.new_page(pno=index + i, width=width, height=height)
 
 
 def duplicate_pages(document, indices: list[int]) -> None:
     indices = sorted(set(indices))
-    with document.edit("Sayfayı çoğalt", structural=True) as doc:
+    with document.edit(_("Sayfayı çoğalt"), structural=True) as doc:
         for offset, pno in enumerate(indices):
             src = pno + offset
             doc.fullcopy_page(src, src + 1)
@@ -33,13 +35,13 @@ def duplicate_pages(document, indices: list[int]) -> None:
 def delete_pages(document, indices: list[int]) -> None:
     keep = [i for i in range(document.page_count) if i not in set(indices)]
     if not keep:
-        raise ValueError("Belgede en az bir sayfa kalmalı")
-    with document.edit("Sayfa sil", structural=True) as doc:
+        raise ValueError(_("Belgede en az bir sayfa kalmalı"))
+    with document.edit(_("Sayfa sil"), structural=True) as doc:
         doc.select(keep)
 
 
 def reorder_pages(document, new_order: list[int]) -> None:
-    with document.edit("Sayfaları yeniden sırala", structural=True) as doc:
+    with document.edit(_("Sayfaları yeniden sırala"), structural=True) as doc:
         doc.select(new_order)
 
 
@@ -54,20 +56,20 @@ def move_pages(document, indices: list[int], target: int) -> None:
 
 
 def rotate_pages(document, indices: list[int], delta: int) -> None:
-    with document.edit("Sayfayı döndür", structural=True) as doc:
+    with document.edit(_("Sayfayı döndür"), structural=True) as doc:
         for pno in indices:
             page = doc[pno]
             page.set_rotation((page.rotation + delta) % 360)
 
 
 def set_rotation(document, indices: list[int], value: int) -> None:
-    with document.edit("Dönüşü ayarla", structural=True) as doc:
+    with document.edit(_("Dönüşü ayarla"), structural=True) as doc:
         for pno in indices:
             doc[pno].set_rotation(value % 360)
 
 
 def crop_page(document, indices: list[int], rect: pymupdf.Rect) -> None:
-    with document.edit("Sayfayı kırp", structural=True) as doc:
+    with document.edit(_("Sayfayı kırp"), structural=True) as doc:
         for pno in indices:
             page = doc[pno]
             r = pymupdf.Rect(rect) & page.mediabox
@@ -77,7 +79,7 @@ def crop_page(document, indices: list[int], rect: pymupdf.Rect) -> None:
 
 
 def reset_crop(document, indices: list[int]) -> None:
-    with document.edit("Kırpmayı sıfırla", structural=True) as doc:
+    with document.edit(_("Kırpmayı sıfırla"), structural=True) as doc:
         for pno in indices:
             page = doc[pno]
             page.set_cropbox(page.mediabox)
@@ -85,7 +87,7 @@ def reset_crop(document, indices: list[int]) -> None:
 
 def resize_pages(document, indices: list[int], width: float, height: float) -> None:
     """Sayfa içeriğini yeni boyuta ölçekleyerek yeniden oluşturur."""
-    with document.edit("Sayfa boyutunu değiştir", structural=True) as doc:
+    with document.edit(_("Sayfa boyutunu değiştir"), structural=True) as doc:
         src = pymupdf.open("pdf", doc.tobytes())  # show_pdf_page kaynak != hedef ister
         targets = sorted(set(indices))
         for k, pno in enumerate(targets):
@@ -102,7 +104,7 @@ def resize_pages(document, indices: list[int], width: float, height: float) -> N
 def merge_files(document, paths: list[str], at: int, passwords: dict[str, str] | None = None) -> int:
     added = 0
     passwords = passwords or {}
-    with document.edit("PDF birleştir", structural=True) as doc:
+    with document.edit(_("PDF birleştir"), structural=True) as doc:
         pos = at
         for p in paths:
             src = pymupdf.open(p)
@@ -121,7 +123,7 @@ def merge_files(document, paths: list[str], at: int, passwords: dict[str, str] |
 
 def insert_images_as_pages(document, paths: list[str], at: int) -> int:
     added = 0
-    with document.edit("Görüntüyü sayfa olarak ekle", structural=True) as doc:
+    with document.edit(_("Görüntüyü sayfa olarak ekle"), structural=True) as doc:
         pos = at
         for p in paths:
             img = pymupdf.open(p)
@@ -176,7 +178,7 @@ def add_text_watermark(
     fontname: str = "helv",
     behind: bool = False,
 ) -> None:
-    with document.edit("Filigran ekle", structural=True) as doc:
+    with document.edit(_("Filigran ekle"), structural=True) as doc:
         for pno in indices:
             page = doc[pno]
             rect = page.rect
@@ -202,7 +204,7 @@ def add_image_watermark(
     document, image_path: str, indices: list[int], *, opacity: float = 0.2, scale: float = 0.5,
     behind: bool = False
 ) -> None:
-    with document.edit("Görüntü filigranı", structural=True) as doc:
+    with document.edit(_("Görüntü filigranı"), structural=True) as doc:
         for pno in indices:
             page = doc[pno]
             r = page.rect
@@ -229,7 +231,7 @@ def add_page_numbers(
 ) -> None:
     total = document.page_count
     font = pymupdf.Font(fontname)
-    with document.edit("Sayfa numarası ekle", structural=True) as doc:
+    with document.edit(_("Sayfa numarası ekle"), structural=True) as doc:
         for i, pno in enumerate(indices):
             page = doc[pno]
             r = page.rect
@@ -251,7 +253,7 @@ def add_header_footer(
     color=(0.2, 0.2, 0.2), margin: float = 24.0, fontname: str = "helv"
 ) -> None:
     font = pymupdf.Font(fontname)
-    with document.edit("Üst/alt bilgi", structural=True) as doc:
+    with document.edit(_("Üst/alt bilgi"), structural=True) as doc:
         for pno in indices:
             page = doc[pno]
             r = page.rect

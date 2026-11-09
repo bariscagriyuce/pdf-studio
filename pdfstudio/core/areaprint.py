@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import pymupdf
 
+from ..i18n import _
+
 FIT = "fit"          # kâğıda sığdır (büyüt/küçült)
 ACTUAL = "actual"    # gerçek boyut (%100)
 CUSTOM = "custom"    # özel ölçek
@@ -42,7 +44,7 @@ def render_area(page: pymupdf.Page, rect, dpi: float, *, alpha: bool = False,
     """Alanı ekranda göründüğü yönde, istenen çözünürlükte görüntüye çevirir."""
     clip = display_rect(page, rect)
     if clip.is_empty:
-        raise ValueError("Seçili alan sayfanın dışında kalıyor")
+        raise ValueError(_("Seçili alan sayfanın dışında kalıyor"))
     return page.get_pixmap(
         dpi=int(dpi), clip=clip, alpha=alpha, annots=True,
         colorspace=pymupdf.csGRAY if gray else pymupdf.csRGB,
@@ -81,7 +83,7 @@ def export_area_pdf(src_doc: pymupdf.Document, items: list[tuple[int, pymupdf.Re
     baked.close()
     if out.page_count == 0:
         out.close()
-        raise ValueError("Yazdırılacak geçerli bir alan yok")
+        raise ValueError(_("Yazdırılacak geçerli bir alan yok"))
     out.save(path, garbage=4, deflate=True)
     out.close()
     return path

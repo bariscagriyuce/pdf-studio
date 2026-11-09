@@ -4,12 +4,13 @@ from __future__ import annotations
 import os
 import sys
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QLocale, Qt
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QApplication
 
+from . import i18n
+from .i18n import _
 from .ui import icons
-from .ui.mainwindow import APP_NAME, MainWindow
 
 
 def app_icon() -> QIcon:
@@ -23,7 +24,9 @@ def app_icon() -> QIcon:
     return ic
 
 
-USAGE = """YUCE PDF Düzenleyici (YUCE PDF EDITOR) — ayrıntılı PDF düzenleyici
+def usage() -> str:
+    from .branding import APP_NAME_EN, APP_NAME_TR
+    return _("""{tr} ({en}) — ayrıntılı PDF düzenleyici
 
 Kullanım:
   PDFStudio [dosya.pdf]      Belgeyi açar (dosya verilmezse boş başlar)
@@ -32,14 +35,21 @@ Kullanım:
       [--screenshot YOL]     Ekran görüntüsü kaydeder
   PDFStudio --version        Sürümü yazar
   PDFStudio --help           Bu yardımı gösterir
-"""
+
+Dil, uygulamada Görünüm → Dil menüsünden ya da PDFSTUDIO_LANG ortam
+değişkeniyle (tr, en, pt_BR) seçilir.
+""").format(tr=APP_NAME_TR, en=APP_NAME_EN)
 
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(argv if argv is not None else sys.argv)
 
+    # Dil, arayüz modülleri içe aktarılmadan ÖNCE kurulmalı: bazı değerler
+    # (ör. pencere başlığındaki uygulama adı) içe aktarma anında hesaplanır.
+    i18n.init()
+
     if "--help" in argv or "-h" in argv:
-        print(USAGE)
+        print(usage())
         return 0
     if "--version" in argv:
         from . import __version__
@@ -63,8 +73,13 @@ def main(argv: list[str] | None = None) -> int:
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
     from .branding import APP_ID, EXE_NAME, SETTINGS_ORG
+    from .ui.mainwindow import APP_NAME, MainWindow
 
     app = QApplication(argv)
+    # Sayı/tarih biçimi arayüz diliyle tutarlı olsun (2.00 / 2,00)
+    QLocale.setDefault(QLocale(i18n.current()))
+    # Qt'nin kendi pencereleri (Evet/Hayır, dosya/renk seçici, baskı önizleme)
+    app._translators = i18n.install_qt_translators(app)
     # Teknik ad sabit kalır: X11'de WM_CLASS olur ve .desktop dosyasındaki
     # StartupWMClass ile eşleşmesi gerekir (görev çubuğu ikonu/gruplama).
     app.setApplicationName(EXE_NAME)

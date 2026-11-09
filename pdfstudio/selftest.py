@@ -146,6 +146,36 @@ def run(screenshot: str | None = None, log_path: str | None = None) -> int:
     check("yazdırma altyapısı", lambda: __import__(
         "PySide6.QtPrintSupport", fromlist=["QPrinter"]).QPrinter())
 
+    def _i18n():
+        from . import i18n
+        before = i18n.current()
+        try:
+            for code, word in (("en", "Save"), ("pt_BR", "Salvar"), ("tr", "Kaydet")):
+                i18n.set_language(code)
+                expect(i18n._("Kaydet") == word, f"{code}: {i18n._('Kaydet')!r}")
+            i18n.set_language("en")
+            expect(i18n._n("{0} sonuç", 1).format(1) == "1 result", "en tekil")
+            expect(i18n._n("{0} sonuç", 3).format(3) == "3 results", "en çoğul")
+        finally:
+            i18n.set_language(before)
+    check("çeviri katalogları (tr/en/pt_BR)", _i18n)
+
+    def _qt_translations():
+        # Qt'nin kendi pencereleri (Evet/Hayır, dosya seçici) için .qm dosyaları
+        # pakette bulunmalı; yoksa bu pencereler İngilizce kalır.
+        from . import i18n
+        before = i18n.current()
+        try:
+            for code in ("tr", "pt_BR"):
+                i18n.set_language(code)
+                loaded = i18n.install_qt_translators(app)
+                for t in loaded:
+                    app.removeTranslator(t)
+                expect(loaded, f"{code} için Qt çevirisi bulunamadı")
+        finally:
+            i18n.set_language(before)
+    check("Qt çevirileri (tr/pt_BR)", _qt_translations)
+
     from .core import areaprint as ap
     area = pymupdf.Rect(55, 65, 420, 100)
     check("alanı görüntüye çevir", lambda: expect(

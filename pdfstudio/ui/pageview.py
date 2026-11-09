@@ -6,6 +6,7 @@ from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsView
 
+from ..i18n import _
 from ..core import textedit as te
 from ..core.renderer import PageRenderer
 from .tools import LINE_TOOLS, MARKUP_TOOLS, RECT_TOOLS, Tool, ToolSettings
@@ -253,7 +254,7 @@ class PageView(QGraphicsView):
         self._scroll_timer.setSingleShot(True)
         self._scroll_timer.setInterval(60)
         self._scroll_timer.timeout.connect(self._update_current_page)
-        self.verticalScrollBar().valueChanged.connect(lambda _: self._scroll_timer.start())
+        self.verticalScrollBar().valueChanged.connect(lambda _x: self._scroll_timer.start())
 
         document.structureChanged.connect(self.reload)
         document.pagesChanged.connect(self.refresh_pages)
@@ -709,7 +710,7 @@ class PageView(QGraphicsView):
                 if blk is None or b.bbox.get_area() < blk.bbox.get_area():
                     blk = b
         if blk is None:
-            self.statusMessage.emit("Bu noktada düzenlenebilir metin bulunamadı.")
+            self.statusMessage.emit(_("Bu noktada düzenlenebilir metin bulunamadı."))
             return
         self.editTextRequested.emit(pno, blk.bbox, blk.text, blk.style)
 
@@ -766,7 +767,7 @@ class PageView(QGraphicsView):
                 p1 = self.item_to_pdf(pno, local)
                 dist = ((p1.x - p0.x) ** 2 + (p1.y - p0.y) ** 2) ** 0.5
                 self.statusMessage.emit(
-                    f"Uzunluk: {dist:.1f} pt  •  {dist / 72 * 25.4:.1f} mm  •  {dist / 72:.2f} inç")
+                    _("Uzunluk: {dist:.1f} pt  •  {0:.1f} mm  •  {1:.2f} inç").format(dist / 72 * 25.4, dist / 72, dist=dist))
         self.viewport().update()
         event.accept()
 

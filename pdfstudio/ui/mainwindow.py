@@ -5,7 +5,7 @@ import os
 import sys
 
 import pymupdf
-from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QTimer
+from PySide6.QtCore import QPointF, QProcess, QRectF, QSettings, QSize, Qt, QTimer
 from PySide6.QtGui import (QAction, QActionGroup, QColor, QGuiApplication, QImage,
                            QPageLayout, QPen,
                            QKeySequence, QPainter)
@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDockWidget, QFileDialog
                                QProgressDialog, QSizePolicy, QSpinBox, QTabWidget,
                                QToolBar, QWidget)
 
+from ..i18n import N_, _, _n
 from ..core import annots as an
 from ..core import areaprint as ap
 from ..core import exporting, forms as fm, images as im, pageops, security
@@ -36,8 +37,13 @@ from .. import __version__ as APP_VERSION
 from ..branding import APP_NAME_EN, APP_NAME_TR, app_name
 
 APP_NAME = app_name()
-PDF_FILTER = "PDF dosyaları (*.pdf);;Tüm dosyalar (*)"
-IMAGE_FILTER = "Görüntüler (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff);;Tüm dosyalar (*)"
+def percent(value: float) -> str:
+    """Yüzde gösterimi dile göre: Türkçede %100, İngilizce/Portekizcede 100%."""
+    return _("%{0}").format(int(round(value)))
+
+
+PDF_FILTER = N_("PDF dosyaları (*.pdf);;Tüm dosyalar (*)")
+IMAGE_FILTER = N_("Görüntüler (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff);;Tüm dosyalar (*)")
 
 
 class MainWindow(QMainWindow):
@@ -87,17 +93,17 @@ class MainWindow(QMainWindow):
 
         c = self.colors["icon"]
         for widget, name, label in (
-            (self.thumbs, "thumbnails", "Sayfalar"),
-            (self.outline, "bookmark", "Yer imleri"),
-            (self.annots_panel, "comment", "Açıklamalar"),
-            (self.search_panel, "search", "Ara"),
-            (self.forms_panel, "form", "Formlar"),
-            (self.images_panel, "image", "Görüntüler"),
+            (self.thumbs, "thumbnails", _("Sayfalar")),
+            (self.outline, "bookmark", _("Yer imleri")),
+            (self.annots_panel, "comment", _("Açıklamalar")),
+            (self.search_panel, "search", _("Ara")),
+            (self.forms_panel, "form", _("Formlar")),
+            (self.images_panel, "image", _("Görüntüler")),
         ):
             self.side_tabs.addTab(widget, icons.icon(name, c, 18), "")
             self.side_tabs.setTabToolTip(self.side_tabs.count() - 1, label)
 
-        self.side_dock = QDockWidget("Gezinme", self)
+        self.side_dock = QDockWidget(_("Gezinme"), self)
         self.side_dock.setObjectName("sideDock")
         self.side_dock.setWidget(self.side_tabs)
         self.side_dock.setFeatures(QDockWidget.DockWidgetMovable |
@@ -106,7 +112,7 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.LeftDockWidgetArea, self.side_dock)
 
         self.inspector = Inspector(self.view)
-        self.inspector_dock = QDockWidget("Özellikler", self)
+        self.inspector_dock = QDockWidget(_("Özellikler"), self)
         self.inspector_dock.setObjectName("inspectorDock")
         self.inspector_dock.setWidget(self.inspector)
         self.inspector_dock.setMinimumWidth(280)
@@ -126,105 +132,105 @@ class MainWindow(QMainWindow):
 
     def _build_actions(self):
         A = self._act
-        self.act_new = A("new", "Yeni boş belge", self.file_new, "Ctrl+N")
-        self.act_new_images = A("image", "Görüntülerden yeni PDF", self.file_new_from_images)
-        self.act_open = A("open", "Aç…", self.file_open, "Ctrl+O")
-        self.act_save = A("save", "Kaydet", self.file_save, "Ctrl+S")
-        self.act_save_as = A("save-as", "Farklı kaydet…", self.file_save_as, "Ctrl+Shift+S")
-        self.act_close = A("close", "Belgeyi kapat", self.file_close, "Ctrl+W")
-        self.act_print = A("print", "Yazdır…", self.file_print, "Ctrl+P")
-        self.act_print_preview = A("print", "Baskı önizleme…", self.file_print_preview)
-        self.act_print_area = A("print-area", "Seçili alanı yazdır…",
+        self.act_new = A("new", _("Yeni boş belge"), self.file_new, "Ctrl+N")
+        self.act_new_images = A("image", _("Görüntülerden yeni PDF"), self.file_new_from_images)
+        self.act_open = A("open", _("Aç…"), self.file_open, "Ctrl+O")
+        self.act_save = A("save", _("Kaydet"), self.file_save, "Ctrl+S")
+        self.act_save_as = A("save-as", _("Farklı kaydet…"), self.file_save_as, "Ctrl+Shift+S")
+        self.act_close = A("close", _("Belgeyi kapat"), self.file_close, "Ctrl+W")
+        self.act_print = A("print", _("Yazdır…"), self.file_print, "Ctrl+P")
+        self.act_print_preview = A("print", _("Baskı önizleme…"), self.file_print_preview)
+        self.act_print_area = A("print-area", _("Seçili alanı yazdır…"),
                                 lambda: self.set_tool(Tool.PRINT_AREA), "Ctrl+Shift+P")
-        self.act_quit = A("close", "Çıkış", self.close, "Ctrl+Q")
+        self.act_quit = A("close", _("Çıkış"), self.close, "Ctrl+Q")
 
-        self.act_undo = A("undo", "Geri al", self.edit_undo, "Ctrl+Z")
-        self.act_redo = A("redo", "Yinele", self.edit_redo, "Ctrl+Y")
-        self.act_copy = A("page-copy", "Seçili metni kopyala", self.edit_copy, "Ctrl+C")
-        self.act_find = A("search", "Bul / Değiştir", self.edit_find, "Ctrl+F")
-        self.act_find_next = A("next", "Sonraki sonuç", lambda: self._step_hit(1), "F3")
-        self.act_find_prev = A("prev", "Önceki sonuç", lambda: self._step_hit(-1), "Shift+F3")
-        self.act_props = A("info", "Belge özellikleri…", self.edit_metadata)
+        self.act_undo = A("undo", _("Geri al"), self.edit_undo, "Ctrl+Z")
+        self.act_redo = A("redo", _("Yinele"), self.edit_redo, "Ctrl+Y")
+        self.act_copy = A("page-copy", _("Seçili metni kopyala"), self.edit_copy, "Ctrl+C")
+        self.act_find = A("search", _("Bul / Değiştir"), self.edit_find, "Ctrl+F")
+        self.act_find_next = A("next", _("Sonraki sonuç"), lambda: self._step_hit(1), "F3")
+        self.act_find_prev = A("prev", _("Önceki sonuç"), lambda: self._step_hit(-1), "Shift+F3")
+        self.act_props = A("info", _("Belge özellikleri…"), self.edit_metadata)
 
-        self.act_zoom_in = A("zoom-in", "Yakınlaştır", self.view.zoom_in, "Ctrl+=")
-        self.act_zoom_out = A("zoom-out", "Uzaklaştır", self.view.zoom_out, "Ctrl+-")
-        self.act_zoom_100 = A("grid", "Gerçek boyut (%100)",
+        self.act_zoom_in = A("zoom-in", _("Yakınlaştır"), self.view.zoom_in, "Ctrl+=")
+        self.act_zoom_out = A("zoom-out", _("Uzaklaştır"), self.view.zoom_out, "Ctrl+-")
+        self.act_zoom_100 = A("grid", _("Gerçek boyut (%100)"),
                               lambda: self.view.set_zoom(1.0), "Ctrl+0")
-        self.act_fit_width = A("fit-width", "Genişliğe sığdır",
+        self.act_fit_width = A("fit-width", _("Genişliğe sığdır"),
                                lambda: self.view.fit("width"), "Ctrl+1")
-        self.act_fit_page = A("fit-page", "Sayfaya sığdır",
+        self.act_fit_page = A("fit-page", _("Sayfaya sığdır"),
                               lambda: self.view.fit("page"), "Ctrl+2")
-        self.act_rot_left = A("rotate-left", "Sayfayı sola döndür",
+        self.act_rot_left = A("rotate-left", _("Sayfayı sola döndür"),
                               lambda: self.page_rotate(-90), "Ctrl+Shift+Left")
-        self.act_rot_right = A("rotate-right", "Sayfayı sağa döndür",
+        self.act_rot_right = A("rotate-right", _("Sayfayı sağa döndür"),
                                lambda: self.page_rotate(90), "Ctrl+Shift+Right")
-        self.act_sidebar = A("sidebar", "Kenar çubuğu", self.toggle_sidebar, "F9", True)
+        self.act_sidebar = A("sidebar", _("Kenar çubuğu"), self.toggle_sidebar, "F9", True)
         self.act_sidebar.setChecked(True)
-        self.act_inspector = A("settings", "Özellikler paneli", self.toggle_inspector,
+        self.act_inspector = A("settings", _("Özellikler paneli"), self.toggle_inspector,
                                "F10", True)
         self.act_inspector.setChecked(True)
-        self.act_fullscreen = A("fullscreen", "Tam ekran", self.toggle_fullscreen, "F11", True)
-        self.act_theme = A("palette", "Temayı değiştir", self.toggle_theme, "Ctrl+Shift+T")
-        self.act_text_boxes = A("grid", "Metin bloklarını göster", self.toggle_text_boxes,
+        self.act_fullscreen = A("fullscreen", _("Tam ekran"), self.toggle_fullscreen, "F11", True)
+        self.act_theme = A("palette", _("Temayı değiştir"), self.toggle_theme, "Ctrl+Shift+T")
+        self.act_text_boxes = A("grid", _("Metin bloklarını göster"), self.toggle_text_boxes,
                                 None, True)
         self.act_text_boxes.setChecked(True)
 
-        self.act_first = A("first", "İlk sayfa", lambda: self.view.goto_page(0), "Ctrl+Home")
-        self.act_prev = A("prev", "Önceki sayfa", self.view.prev_page, "PgUp")
-        self.act_next = A("next", "Sonraki sayfa", self.view.next_page, "PgDown")
-        self.act_last = A("last", "Son sayfa",
+        self.act_first = A("first", _("İlk sayfa"), lambda: self.view.goto_page(0), "Ctrl+Home")
+        self.act_prev = A("prev", _("Önceki sayfa"), self.view.prev_page, "PgUp")
+        self.act_next = A("next", _("Sonraki sayfa"), self.view.next_page, "PgDown")
+        self.act_last = A("last", _("Son sayfa"),
                           lambda: self.view.goto_page(self.document.page_count - 1),
                           "Ctrl+End")
 
         # sayfa işlemleri
-        self.act_page_insert = A("page-add", "Boş sayfa ekle…", self.page_insert)
-        self.act_page_delete = A("page-delete", "Sayfaları sil", self.page_delete)
-        self.act_page_dup = A("page-copy", "Sayfaları çoğalt", self.page_duplicate)
-        self.act_page_extract = A("extract", "Sayfaları çıkar…", self.page_extract)
-        self.act_page_crop = A("crop", "Kırpma aracı", lambda: self.set_tool(Tool.CROP))
-        self.act_page_crop_reset = A("crop", "Kırpmayı sıfırla", self.page_reset_crop)
-        self.act_page_resize = A("fit-page", "Sayfa boyutunu değiştir…", self.page_resize)
-        self.act_merge = A("merge", "PDF birleştir…", self.page_merge)
-        self.act_images_as_pages = A("image", "Görüntüleri sayfa olarak ekle…",
+        self.act_page_insert = A("page-add", _("Boş sayfa ekle…"), self.page_insert)
+        self.act_page_delete = A("page-delete", _("Sayfaları sil"), self.page_delete)
+        self.act_page_dup = A("page-copy", _("Sayfaları çoğalt"), self.page_duplicate)
+        self.act_page_extract = A("extract", _("Sayfaları çıkar…"), self.page_extract)
+        self.act_page_crop = A("crop", _("Kırpma aracı"), lambda: self.set_tool(Tool.CROP))
+        self.act_page_crop_reset = A("crop", _("Kırpmayı sıfırla"), self.page_reset_crop)
+        self.act_page_resize = A("fit-page", _("Sayfa boyutunu değiştir…"), self.page_resize)
+        self.act_merge = A("merge", _("PDF birleştir…"), self.page_merge)
+        self.act_images_as_pages = A("image", _("Görüntüleri sayfa olarak ekle…"),
                                      self.page_add_images)
-        self.act_split = A("split", "PDF'i böl…", self.page_split)
-        self.act_reverse = A("layers", "Sayfa sırasını ters çevir", self.page_reverse)
+        self.act_split = A("split", _("PDF'i böl…"), self.page_split)
+        self.act_reverse = A("layers", _("Sayfa sırasını ters çevir"), self.page_reverse)
 
         # ekleme
-        self.act_watermark = A("watermark", "Filigran…", self.insert_watermark)
-        self.act_pagenum = A("number", "Sayfa numarası / üst-alt bilgi…", self.insert_pagenum)
-        self.act_attach = A("import", "Dosya eki ekle…", self.insert_attachment)
+        self.act_watermark = A("watermark", _("Filigran…"), self.insert_watermark)
+        self.act_pagenum = A("number", _("Sayfa numarası / üst-alt bilgi…"), self.insert_pagenum)
+        self.act_attach = A("import", _("Dosya eki ekle…"), self.insert_attachment)
 
         # form
-        self.act_form_export = A("export", "Form değerlerini dışa aktar…",
+        self.act_form_export = A("export", _("Form değerlerini dışa aktar…"),
                                  self.form_export)
-        self.act_form_import = A("import", "Form değerlerini içe aktar…", self.form_import)
-        self.act_form_flatten = A("layers", "Formu düzleştir", self.form_flatten)
+        self.act_form_import = A("import", _("Form değerlerini içe aktar…"), self.form_import)
+        self.act_form_flatten = A("layers", _("Formu düzleştir"), self.form_flatten)
 
         # araçlar
-        self.act_apply_redactions = A("redact", "Karartmaları uygula",
+        self.act_apply_redactions = A("redact", _("Karartmaları uygula"),
                                       self.apply_redactions, "Ctrl+Shift+R")
-        self.act_flatten = A("layers", "Açıklamaları düzleştir", self.flatten_annots)
-        self.act_clear_annots = A("trash", "Tüm açıklamaları kaldır", self.clear_annots)
-        self.act_ocr = A("ocr", "OCR uygula…", self.tools_ocr)
-        self.act_compress = A("compress", "Boyut küçült…", self.tools_compress)
-        self.act_sanitize = A("lock", "Gizlilik temizliği…", self.tools_sanitize)
-        self.act_encrypt = A("lock", "Şifrele / izinler…", self.tools_encrypt)
-        self.act_decrypt = A("unlock", "Şifrelemeyi kaldır…", self.tools_decrypt)
-        self.act_doc_info = A("info", "Belge bilgisi…", self.tools_doc_info)
-        self.act_rescan_fonts = A("text-edit", "Yazı tiplerini yeniden tara",
+        self.act_flatten = A("layers", _("Açıklamaları düzleştir"), self.flatten_annots)
+        self.act_clear_annots = A("trash", _("Tüm açıklamaları kaldır"), self.clear_annots)
+        self.act_ocr = A("ocr", _("OCR uygula…"), self.tools_ocr)
+        self.act_compress = A("compress", _("Boyut küçült…"), self.tools_compress)
+        self.act_sanitize = A("lock", _("Gizlilik temizliği…"), self.tools_sanitize)
+        self.act_encrypt = A("lock", _("Şifrele / izinler…"), self.tools_encrypt)
+        self.act_decrypt = A("unlock", _("Şifrelemeyi kaldır…"), self.tools_decrypt)
+        self.act_doc_info = A("info", _("Belge bilgisi…"), self.tools_doc_info)
+        self.act_rescan_fonts = A("text-edit", _("Yazı tiplerini yeniden tara"),
                                   self.tools_rescan_fonts)
 
         # dışa aktarma
-        self.act_export_images = A("image", "Sayfaları görüntü olarak…", self.export_images)
-        self.act_export_text = A("text-edit", "Metin / HTML olarak…", self.export_text)
-        self.act_export_pages = A("extract", "Seçili sayfaları PDF olarak…",
+        self.act_export_images = A("image", _("Sayfaları görüntü olarak…"), self.export_images)
+        self.act_export_text = A("text-edit", _("Metin / HTML olarak…"), self.export_text)
+        self.act_export_pages = A("extract", _("Seçili sayfaları PDF olarak…"),
                                   self.page_extract)
-        self.act_export_all_images = A("image", "Gömülü görüntüleri çıkar…",
+        self.act_export_all_images = A("image", _("Gömülü görüntüleri çıkar…"),
                                        self.export_embedded_images)
 
-        self.act_about = A("info", "Hakkında", self.help_about)
-        self.act_shortcuts = A("info", "Klavye kısayolları", self.help_shortcuts)
+        self.act_about = A("info", _("Hakkında"), self.help_about)
+        self.act_shortcuts = A("info", _("Klavye kısayolları"), self.help_shortcuts)
 
         # ---- araç grubu
         self.tool_actions: dict[Tool, QAction] = {}
@@ -261,14 +267,14 @@ class MainWindow(QMainWindow):
             (Tool.FORM_CHECK, "check", None),
         ]
         for tool, icon_name, shortcut in tool_defs:
-            a = self._act(icon_name, TOOL_LABELS[tool],
+            a = self._act(icon_name, _(TOOL_LABELS[tool]),
                           lambda checked=False, t=tool: self.set_tool(t), shortcut, True)
             self.tool_group.addAction(a)
             self.tool_actions[tool] = a
         self.tool_actions[Tool.SELECT].setChecked(True)
 
     def _build_toolbars(self):
-        tb = QToolBar("Ana")
+        tb = QToolBar(_("Ana"))
         tb.setObjectName("mainToolbar")
         tb.setIconSize(QSize(21, 21))
         tb.setMovable(False)
@@ -283,9 +289,11 @@ class MainWindow(QMainWindow):
 
         self.zoom_box = QComboBox()
         self.zoom_box.setEditable(True)
-        self.zoom_box.addItems(["%25", "%50", "%75", "%100", "%125", "%150", "%200",
-                                "%400", "Genişliğe sığdır", "Sayfaya sığdır"])
-        self.zoom_box.setCurrentText("%100")
+        for pct in (25, 50, 75, 100, 125, 150, 200, 400):
+            self.zoom_box.addItem(percent(pct), pct / 100.0)
+        self.zoom_box.addItem(_("Genişliğe sığdır"), "width")
+        self.zoom_box.addItem(_("Sayfaya sığdır"), "page")
+        self.zoom_box.setCurrentText(percent(100))
         self.zoom_box.setFixedWidth(140)
         self.zoom_box.activated.connect(self._zoom_box_changed)
         self.zoom_box.lineEdit().returnPressed.connect(
@@ -314,8 +322,8 @@ class MainWindow(QMainWindow):
         tb.addSeparator()
 
         self.layout_box = QComboBox()
-        self.layout_box.addItems(["Sürekli", "Tek sayfa", "Çift sayfa",
-                                  "Çift sayfa (kapaklı)"])
+        self.layout_box.addItems([_("Sürekli"), _("Tek sayfa"), _("Çift sayfa"),
+                                  _("Çift sayfa (kapaklı)")])
         self.layout_box.setFixedWidth(150)
         self.layout_box.currentIndexChanged.connect(self._layout_changed)
         tb.addWidget(self.layout_box)
@@ -329,7 +337,7 @@ class MainWindow(QMainWindow):
         tb.addAction(self.act_theme)
 
         # ---------------- araç çubuğu
-        tt = QToolBar("Araçlar")
+        tt = QToolBar(_("Araçlar"))
         tt.setObjectName("toolsToolbar")
         tt.setIconSize(QSize(20, 20))
         tt.setMovable(False)
@@ -362,17 +370,17 @@ class MainWindow(QMainWindow):
     def _build_menu(self):
         mb = self.menuBar()
 
-        m = mb.addMenu("&Dosya")
+        m = mb.addMenu(_("&Dosya"))
         m.addAction(self.act_new)
         m.addAction(self.act_new_images)
         m.addAction(self.act_open)
-        self.recent_menu = m.addMenu("Son kullanılanlar")
+        self.recent_menu = m.addMenu(_("Son kullanılanlar"))
         m.addSeparator()
         m.addAction(self.act_save)
         m.addAction(self.act_save_as)
         m.addAction(self.act_encrypt)
         m.addSeparator()
-        ex = m.addMenu(icons.icon("export", self.colors["icon"], 18), "Dışa aktar")
+        ex = m.addMenu(icons.icon("export", self.colors["icon"], 18), _("Dışa aktar"))
         ex.addAction(self.act_export_images)
         ex.addAction(self.act_export_text)
         ex.addAction(self.act_export_pages)
@@ -385,7 +393,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_close)
         m.addAction(self.act_quit)
 
-        m = mb.addMenu("Dü&zen")
+        m = mb.addMenu(_("Dü&zen"))
         m.addAction(self.act_undo)
         m.addAction(self.act_redo)
         m.addSeparator()
@@ -396,7 +404,7 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addAction(self.act_props)
 
-        m = mb.addMenu("&Görünüm")
+        m = mb.addMenu(_("&Görünüm"))
         m.addAction(self.act_zoom_in)
         m.addAction(self.act_zoom_out)
         m.addAction(self.act_zoom_100)
@@ -411,8 +419,10 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_text_boxes)
         m.addAction(self.act_fullscreen)
         m.addAction(self.act_theme)
+        m.addSeparator()
+        self._build_language_menu(m)
 
-        m = mb.addMenu("&Sayfa")
+        m = mb.addMenu(_("&Sayfa"))
         m.addAction(self.act_page_insert)
         m.addAction(self.act_images_as_pages)
         m.addAction(self.act_page_dup)
@@ -430,7 +440,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_split)
         m.addAction(self.act_page_extract)
 
-        m = mb.addMenu("&Metin")
+        m = mb.addMenu(_("&Metin"))
         m.addAction(self.tool_actions[Tool.TEXT_EDIT])
         m.addAction(self.tool_actions[Tool.TEXT_ADD])
         m.addAction(self.tool_actions[Tool.ERASE_AREA])
@@ -438,7 +448,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_find)
         m.addAction(self.act_export_text)
 
-        m = mb.addMenu("&Ekle")
+        m = mb.addMenu(_("&Ekle"))
         for t in (Tool.IMAGE, Tool.SIGNATURE, Tool.STAMP, Tool.LINK, Tool.NOTE,
                   Tool.FREETEXT):
             m.addAction(self.tool_actions[t])
@@ -447,7 +457,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_pagenum)
         m.addAction(self.act_attach)
 
-        m = mb.addMenu("&Form")
+        m = mb.addMenu(_("&Form"))
         m.addAction(self.tool_actions[Tool.FORM_TEXT])
         m.addAction(self.tool_actions[Tool.FORM_CHECK])
         m.addSeparator()
@@ -455,7 +465,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_form_import)
         m.addAction(self.act_form_flatten)
 
-        m = mb.addMenu("&Araçlar")
+        m = mb.addMenu(_("&Araçlar"))
         m.addAction(self.tool_actions[Tool.REDACT])
         m.addAction(self.act_apply_redactions)
         m.addSeparator()
@@ -470,14 +480,14 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_doc_info)
         m.addAction(self.act_rescan_fonts)
 
-        m = mb.addMenu("&Yardım")
+        m = mb.addMenu(_("&Yardım"))
         m.addAction(self.act_shortcuts)
         m.addAction(self.act_about)
         self._refresh_recent()
 
     def _build_statusbar(self):
         sb = self.statusBar()
-        self.status_file = QLabel("Belge açık değil")
+        self.status_file = QLabel(_("Belge açık değil"))
         self.status_zoom = QLabel("")
         self.status_tool = QLabel("")
         sb.addWidget(self.status_file, 1)
@@ -587,7 +597,7 @@ class MainWindow(QMainWindow):
             return
         star = "•  " if self.document.dirty else ""
         self.setWindowTitle(f"{star}{self.document.display_name} — {APP_NAME}")
-        self.status_file.setText(self.document.path or "Kaydedilmemiş belge")
+        self.status_file.setText(self.document.path or _("Kaydedilmemiş belge"))
 
     def _update_actions(self):
         opened = self.document.is_open
@@ -606,7 +616,7 @@ class MainWindow(QMainWindow):
         self.act_undo.setEnabled(opened and self.document.history.can_undo())
         self.act_redo.setEnabled(opened and self.document.history.can_redo())
         if opened and self.document.history.can_undo():
-            self.act_undo.setToolTip(f"Geri al: {self.document.history.undo_label()}")
+            self.act_undo.setToolTip(_("Geri al: {0}").format(self.document.history.undo_label()))
         self.act_apply_redactions.setEnabled(bool(self.view.pending_redactions))
         self._update_title()
 
@@ -618,14 +628,14 @@ class MainWindow(QMainWindow):
         self.inspector.update_page_info(pno)
 
     def _on_zoom_changed(self, zoom: float):
-        self.status_zoom.setText(f"%{zoom * 100:.0f}")
+        self.status_zoom.setText(percent(zoom * 100))
         self.zoom_box.blockSignals(True)
         if self.view.fit_mode == "width":
-            self.zoom_box.setCurrentText("Genişliğe sığdır")
+            self.zoom_box.setCurrentText(_("Genişliğe sığdır"))
         elif self.view.fit_mode == "page":
-            self.zoom_box.setCurrentText("Sayfaya sığdır")
+            self.zoom_box.setCurrentText(_("Sayfaya sığdır"))
         else:
-            self.zoom_box.setCurrentText(f"%{zoom * 100:.0f}")
+            self.zoom_box.setCurrentText(percent(zoom * 100))
         self.zoom_box.blockSignals(False)
 
     def _page_spin_changed(self, value: int):
@@ -634,11 +644,14 @@ class MainWindow(QMainWindow):
 
     def _zoom_box_changed(self, _index: int):
         text = self.zoom_box.currentText().strip()
-        if "genişl" in text.lower():
-            self.view.fit("width")
+        # Listeden seçilen (veya listedeki bir metinle aynı yazılan) öğe: verisini kullan
+        idx = self.zoom_box.findText(text)
+        data = self.zoom_box.itemData(idx) if idx >= 0 else None
+        if data in ("width", "page"):
+            self.view.fit(data)
             return
-        if "sayfa" in text.lower():
-            self.view.fit("page")
+        if isinstance(data, float):
+            self.view.set_zoom(data)
             return
         digits = "".join(ch for ch in text if ch.isdigit() or ch == ".")
         try:
@@ -673,8 +686,8 @@ class MainWindow(QMainWindow):
         if not self.document.is_open or not self.document.dirty:
             return True
         res = QMessageBox.question(
-            self, "Kaydedilmemiş değişiklikler",
-            f"“{self.document.display_name}” kaydedilmedi. Ne yapmak istersiniz?",
+            self, _("Kaydedilmemiş değişiklikler"),
+            _("“{0}” kaydedilmedi. Ne yapmak istersiniz?").format(self.document.display_name),
             QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
             QMessageBox.Save)
         if res == QMessageBox.Save:
@@ -694,7 +707,7 @@ class MainWindow(QMainWindow):
         self.view.fit("width")
 
     def file_new_from_images(self):
-        paths, _ = QFileDialog.getOpenFileNames(self, "Görüntü seç", "", IMAGE_FILTER)
+        paths, _x = QFileDialog.getOpenFileNames(self, _("Görüntü seç"), "", _(IMAGE_FILTER))
         if not paths or not self._confirm_discard():
             return
         self.document.new_from_images(paths)
@@ -702,7 +715,7 @@ class MainWindow(QMainWindow):
 
     def file_open(self):
         start = self.settings_store.value("last_dir", "")
-        path, _ = QFileDialog.getOpenFileName(self, "PDF aç", start, PDF_FILTER)
+        path, _x = QFileDialog.getOpenFileName(self, _("PDF aç"), start, _(PDF_FILTER))
         if path:
             self.open_path(path)
 
@@ -720,12 +733,12 @@ class MainWindow(QMainWindow):
                     return
                 password = d.password()
             except Exception as exc:
-                QMessageBox.critical(self, "Açılamadı", f"{path}\n\n{exc}")
+                QMessageBox.critical(self, _("Açılamadı"), f"{path}\n\n{exc}")
                 return
         self.settings_store.setValue("last_dir", os.path.dirname(path))
         self._push_recent(path)
         self.view.fit("width")
-        self.statusBar().showMessage(f"Açıldı: {path}", 5000)
+        self.statusBar().showMessage(_("Açıldı: {path}").format(path=path), 5000)
 
     def file_save(self) -> bool:
         if not self.document.is_open:
@@ -735,9 +748,9 @@ class MainWindow(QMainWindow):
         try:
             self.document.save()
         except Exception as exc:
-            QMessageBox.critical(self, "Kaydedilemedi", str(exc))
+            QMessageBox.critical(self, _("Kaydedilemedi"), str(exc))
             return False
-        self.statusBar().showMessage(f"Kaydedildi: {self.document.path}", 4000)
+        self.statusBar().showMessage(_("Kaydedildi: {0}").format(self.document.path), 4000)
         return True
 
     def file_save_as(self) -> bool:
@@ -745,7 +758,7 @@ class MainWindow(QMainWindow):
             return False
         start = self.document.path or os.path.join(
             self.settings_store.value("last_dir", ""), "belge.pdf")
-        path, _ = QFileDialog.getSaveFileName(self, "Farklı kaydet", start, PDF_FILTER)
+        path, _x = QFileDialog.getSaveFileName(self, _("Farklı kaydet"), start, _(PDF_FILTER))
         if not path:
             return False
         if not path.lower().endswith(".pdf"):
@@ -753,10 +766,10 @@ class MainWindow(QMainWindow):
         try:
             self.document.save(path)
         except Exception as exc:
-            QMessageBox.critical(self, "Kaydedilemedi", str(exc))
+            QMessageBox.critical(self, _("Kaydedilemedi"), str(exc))
             return False
         self._push_recent(path)
-        self.statusBar().showMessage(f"Kaydedildi: {path}", 4000)
+        self.statusBar().showMessage(_("Kaydedildi: {path}").format(path=path), 4000)
         self._update_title()
         return True
 
@@ -779,7 +792,7 @@ class MainWindow(QMainWindow):
         items = [p for p in (self.settings_store.value("recent", []) or [])
                  if os.path.exists(p)]
         if not items:
-            a = QAction("(boş)", self)
+            a = QAction(_("(boş)"), self)
             a.setEnabled(False)
             self.recent_menu.addAction(a)
             return
@@ -789,7 +802,7 @@ class MainWindow(QMainWindow):
             a.triggered.connect(lambda _c=False, path=p: self.open_path(path))
             self.recent_menu.addAction(a)
         self.recent_menu.addSeparator()
-        clear = QAction("Listeyi temizle", self)
+        clear = QAction(_("Listeyi temizle"), self)
         clear.triggered.connect(lambda: (self.settings_store.setValue("recent", []),
                                          self._refresh_recent()))
         self.recent_menu.addAction(clear)
@@ -825,7 +838,7 @@ class MainWindow(QMainWindow):
             return
         printer = QPrinter(QPrinter.HighResolution)
         d = QPrintDialog(printer, self)
-        d.setWindowTitle("Yazdır")
+        d.setWindowTitle(_("Yazdır"))
         if d.exec():
             self._print_render(printer)
 
@@ -846,7 +859,7 @@ class MainWindow(QMainWindow):
         page = self.document.page(pno)
         clip = ap.clamp_to_page(page, rect)
         if clip.is_empty or clip.width < 2 or clip.height < 2:
-            self.statusBar().showMessage("Seçili alan çok küçük ya da sayfanın dışında", 4000)
+            self.statusBar().showMessage(_("Seçili alan çok küçük ya da sayfanın dışında"), 4000)
             return
         d = dlg.AreaPrintDialog(self.document.page_count, pno,
                                 ap.area_size_pt(page, clip), self)
@@ -859,8 +872,8 @@ class MainWindow(QMainWindow):
             stem = os.path.splitext(self.document.display_name)[0]
             start = os.path.join(self.settings_store.value("last_dir", ""),
                                  f"{stem}_alan_s{pno + 1}.pdf")
-            path, _ = QFileDialog.getSaveFileName(self, "Alanı PDF olarak kaydet",
-                                                  start, PDF_FILTER)
+            path, _x = QFileDialog.getSaveFileName(self, _("Alanı PDF olarak kaydet"),
+                                                  start, _(PDF_FILTER))
             if not path:
                 return
             if not path.lower().endswith(".pdf"):
@@ -868,17 +881,17 @@ class MainWindow(QMainWindow):
             try:
                 ap.export_area_pdf(self.document.doc, items, path)
             except Exception as exc:
-                QMessageBox.critical(self, "Kaydedilemedi", str(exc))
+                QMessageBox.critical(self, _("Kaydedilemedi"), str(exc))
                 return
-            self.statusBar().showMessage(f"Alan kaydedildi: {path}", 6000)
+            self.statusBar().showMessage(_("Alan kaydedildi: {path}").format(path=path), 6000)
             return
 
         printer = QPrinter(QPrinter.HighResolution)
         w, h = ap.area_size_pt(page, clip)
         printer.setPageOrientation(QPageLayout.Landscape if w > h else QPageLayout.Portrait)
-        printer.setDocName(f"{self.document.display_name} — seçili alan")
+        printer.setDocName(_("{0} — seçili alan").format(self.document.display_name))
         preview = QPrintPreviewDialog(printer, self)
-        preview.setWindowTitle("Seçili alan — baskı önizleme")
+        preview.setWindowTitle(_("Seçili alan — baskı önizleme"))
         preview.resize(1000, 800)
         preview.paintRequested.connect(
             lambda pr: self._print_area_render(pr, items, opts))
@@ -948,20 +961,20 @@ class MainWindow(QMainWindow):
     def edit_undo(self):
         label = self.document.undo()
         if label:
-            self.statusBar().showMessage(f"Geri alındı: {label}", 3000)
+            self.statusBar().showMessage(_("Geri alındı: {label}").format(label=label), 3000)
 
     def edit_redo(self):
         label = self.document.redo()
         if label:
-            self.statusBar().showMessage(f"Yinelendi: {label}", 3000)
+            self.statusBar().showMessage(_("Yinelendi: {label}").format(label=label), 3000)
 
     def edit_copy(self):
         text = self.view.selected_text()
         if text:
             QGuiApplication.clipboard().setText(text)
-            self.statusBar().showMessage(f"{len(text)} karakter kopyalandı", 3000)
+            self.statusBar().showMessage(_n("{0} karakter kopyalandı", len(text)).format(len(text)), 3000)
         else:
-            self.statusBar().showMessage("Önce metin seçin (Seç aracı ile sürükleyin)",
+            self.statusBar().showMessage(_("Önce metin seçin (Seç aracı ile sürükleyin)"),
                                          4000)
 
     def edit_find(self):
@@ -978,7 +991,7 @@ class MainWindow(QMainWindow):
             meta = self.document.metadata()
             meta.update(d.metadata())
             self.document.set_metadata(meta)
-            self.statusBar().showMessage("Belge özellikleri güncellendi", 3000)
+            self.statusBar().showMessage(_("Belge özellikleri güncellendi"), 3000)
 
     # ================================================================== arama
     def do_search(self, needle: str, case: bool, whole: bool):
@@ -1000,7 +1013,7 @@ class MainWindow(QMainWindow):
         self.search_panel.show_results(hits[:400], snippets)
         if hits:
             self.view.goto_hit(0)
-        self.statusBar().showMessage(f"{len(hits)} sonuç bulundu", 4000)
+        self.statusBar().showMessage(_n("{0} sonuç bulundu", len(hits)).format(len(hits)), 4000)
 
     def _step_hit(self, delta: int):
         if not self._search_hits:
@@ -1012,9 +1025,8 @@ class MainWindow(QMainWindow):
         if not self.document.is_open or not needle:
             return
         res = QMessageBox.question(
-            self, "Tümünü değiştir",
-            f"'{needle}' → '{repl}' değişimi belgedeki tüm eşleşmelere uygulanacak.\n"
-            "Bu işlem sayfa içeriğini kalıcı olarak değiştirir (geri alınabilir).",
+            self, _("Tümünü değiştir"),
+            _("'{needle}' → '{repl}' değişimi belgedeki tüm eşleşmelere uygulanacak.\nBu işlem sayfa içeriğini kalıcı olarak değiştirir (geri alınabilir).").format(needle=needle, repl=repl),
             QMessageBox.Yes | QMessageBox.No)
         if res != QMessageBox.Yes:
             return
@@ -1023,7 +1035,7 @@ class MainWindow(QMainWindow):
             n = te.replace_all(self.document, needle, repl, match_style=keep_style)
         finally:
             QApplication.restoreOverrideCursor()
-        self.statusBar().showMessage(f"{n} eşleşme değiştirildi", 5000)
+        self.statusBar().showMessage(_n("{n} eşleşme değiştirildi", n).format(n=n), 5000)
         self.do_search(needle, False, False)
 
     def _goto_rect(self, pno: int, rect):
@@ -1038,9 +1050,9 @@ class MainWindow(QMainWindow):
         self.view.set_tool(tool)
         self.tool_actions[tool].setChecked(True)
         self.inspector.set_tool(tool)
-        self.status_tool.setText(TOOL_LABELS.get(tool, ""))
+        self.status_tool.setText(_(TOOL_LABELS.get(tool, "")))
         from .tools import TOOL_HINTS
-        self.tool_hint.setText(TOOL_HINTS.get(tool, ""))
+        self.tool_hint.setText(_(TOOL_HINTS.get(tool, "")))
         if tool == Tool.IMAGE and not self.view.settings.image_path:
             self.on_inspector_action("pick_image")
         if tool == Tool.SIGNATURE and not self.view.settings.signature_bytes:
@@ -1048,11 +1060,11 @@ class MainWindow(QMainWindow):
 
     def on_inspector_action(self, name: str):
         if name == "pick_image":
-            path, _ = QFileDialog.getOpenFileName(self, "Görüntü seç", "", IMAGE_FILTER)
+            path, _x = QFileDialog.getOpenFileName(self, _("Görüntü seç"), "", _(IMAGE_FILTER))
             if path:
                 self.view.settings.image_path = path
                 self.statusBar().showMessage(
-                    f"Görüntü hazır: {os.path.basename(path)} — sayfada bir kutu çizin", 6000)
+                    _("Görüntü hazır: {0} — sayfada bir kutu çizin").format(os.path.basename(path)), 6000)
         elif name == "make_signature":
             d = dlg.SignatureDialog(self)
             if d.exec():
@@ -1060,9 +1072,9 @@ class MainWindow(QMainWindow):
                 if data:
                     self.view.settings.signature_bytes = data
                     self.statusBar().showMessage(
-                        "İmza hazır — yerleştirmek için sayfada bir kutu çizin", 6000)
+                        _("İmza hazır — yerleştirmek için sayfada bir kutu çizin"), 6000)
                 else:
-                    QMessageBox.information(self, "İmza", "İmza oluşturulamadı.")
+                    QMessageBox.information(self, _("İmza"), _("İmza oluşturulamadı."))
         elif name == "delete_object":
             self.delete_selected_object()
 
@@ -1079,14 +1091,14 @@ class MainWindow(QMainWindow):
                                         background=d.background(), grow=d.grow())
         except Exception as exc:
             QApplication.restoreOverrideCursor()
-            QMessageBox.critical(self, "Düzenlenemedi", str(exc))
+            QMessageBox.critical(self, _("Düzenlenemedi"), str(exc))
             return
         QApplication.restoreOverrideCursor()
         if not ok:
             self.statusBar().showMessage(
-                "Metin kutuya tam sığmadı; punto otomatik küçültüldü.", 6000)
+                _("Metin kutuya tam sığmadı; punto otomatik küçültüldü."), 6000)
         else:
-            self.statusBar().showMessage("Metin güncellendi", 3000)
+            self.statusBar().showMessage(_("Metin güncellendi"), 3000)
 
     def on_rect_tool(self, tool: Tool, payload):
         pno, rect = payload
@@ -1104,7 +1116,7 @@ class MainWindow(QMainWindow):
                     if text.strip():
                         te.insert_text_box(self.document, pno, rect, text, st)
             elif tool == Tool.FREETEXT:
-                text, ok = QInputDialog.getMultiLineText(self, "Metin kutusu", "Metin:")
+                text, ok = QInputDialog.getMultiLineText(self, _("Metin kutusu"), _("Metin:"))
                 if ok and text:
                     an.add_free_text(self.document, pno, rect, text,
                                      fontsize=s.fontsize, text_color=s.text_color,
@@ -1141,8 +1153,7 @@ class MainWindow(QMainWindow):
                 self.view.viewport().update()
                 self.act_apply_redactions.setEnabled(True)
                 self.statusBar().showMessage(
-                    f"{len(self.view.pending_redactions)} karartma bekliyor — "
-                    "uygulamak için Ctrl+Shift+R", 6000)
+                    _n("{0} karartma bekliyor — uygulamak için Ctrl+Shift+R", len(self.view.pending_redactions)).format(len(self.view.pending_redactions)), 6000)
             elif tool == Tool.ERASE_AREA:
                 te.delete_text_region(self.document, pno, rect, remove_images=True,
                                       remove_graphics=True)
@@ -1153,18 +1164,18 @@ class MainWindow(QMainWindow):
                 self.view.fit(self.view.fit_mode if self.view.fit_mode != "none"
                               else "width")
             elif tool == Tool.FORM_TEXT:
-                name, ok = QInputDialog.getText(self, "Metin alanı", "Alan adı:",
+                name, ok = QInputDialog.getText(self, _("Metin alanı"), _("Alan adı:"),
                                                 text=f"metin_{pno + 1}")
                 if ok and name:
                     fm.add_field(self.document, pno, rect, kind="text", name=name,
                                  fontsize=s.fontsize)
             elif tool == Tool.FORM_CHECK:
-                name, ok = QInputDialog.getText(self, "Onay kutusu", "Alan adı:",
+                name, ok = QInputDialog.getText(self, _("Onay kutusu"), _("Alan adı:"),
                                                 text=f"onay_{pno + 1}")
                 if ok and name:
                     fm.add_field(self.document, pno, rect, kind="checkbox", name=name)
         except Exception as exc:
-            QMessageBox.critical(self, "İşlem başarısız", str(exc))
+            QMessageBox.critical(self, _("İşlem başarısız"), str(exc))
 
     def on_line_tool(self, tool: Tool, payload):
         pno, p0, p1 = payload
@@ -1174,13 +1185,13 @@ class MainWindow(QMainWindow):
             an.add_shape(self.document, pno, kind, p0, p1, color=s.color,
                          width=s.width, opacity=s.opacity, author=s.author)
         except Exception as exc:
-            QMessageBox.critical(self, "İşlem başarısız", str(exc))
+            QMessageBox.critical(self, _("İşlem başarısız"), str(exc))
 
     def on_point_tool(self, tool: Tool, payload):
         pno, point = payload
         s = self.view.settings
         if tool == Tool.NOTE:
-            text, ok = QInputDialog.getMultiLineText(self, "Yapışkan not", "Not:")
+            text, ok = QInputDialog.getMultiLineText(self, _("Yapışkan not"), _("Not:"))
             if ok and text:
                 an.add_sticky_note(self.document, pno, (point.x, point.y), text,
                                    icon=s.note_icon, color=s.color, author=s.author)
@@ -1188,7 +1199,7 @@ class MainWindow(QMainWindow):
             page = self.document.page(pno)
             a = an.annot_at(page, point)
             if a is None:
-                self.statusBar().showMessage("Bu noktada açıklama yok", 3000)
+                self.statusBar().showMessage(_("Bu noktada açıklama yok"), 3000)
                 return
             an.delete_annot(self.document, pno, a.xref)
 
@@ -1222,40 +1233,40 @@ class MainWindow(QMainWindow):
             text = self.view.selected_text()
             if text:
                 self.statusBar().showMessage(
-                    f"{len(text)} karakter seçildi (Ctrl+C ile kopyalayın)", 4000)
+                    _n("{0} karakter seçildi (Ctrl+C ile kopyalayın)", len(text)).format(len(text)), 4000)
 
     def on_context_menu(self, pno: int, point, global_pos):
         m = QMenu(self)
         sel = self.view.selection_quads and self.view.selection_page == pno
         if sel:
-            m.addAction("Kopyala", self.edit_copy)
-            m.addAction("Vurgula", lambda: self.on_selection_apply(pno, "highlight"))
-            m.addAction("Altını çiz", lambda: self.on_selection_apply(pno, "underline"))
-            m.addAction("Üstünü çiz", lambda: self.on_selection_apply(pno, "strikeout"))
+            m.addAction(_("Kopyala"), self.edit_copy)
+            m.addAction(_("Vurgula"), lambda: self.on_selection_apply(pno, "highlight"))
+            m.addAction(_("Altını çiz"), lambda: self.on_selection_apply(pno, "underline"))
+            m.addAction(_("Üstünü çiz"), lambda: self.on_selection_apply(pno, "strikeout"))
             m.addSeparator()
         obj = self.view._object_at(pno, self.view.pdf_to_item(pno, point))
         if obj:
             self.view.selected_object = obj
             self.inspector.set_object(obj)
             self.view.viewport().update()
-            m.addAction("Bu nesneyi sil", self.delete_selected_object)
+            m.addAction(_("Bu nesneyi sil"), self.delete_selected_object)
             if obj[1] == "image":
-                m.addAction("Görüntüyü değiştir…",
+                m.addAction(_("Görüntüyü değiştir…"),
                             lambda: self.on_image_command("replace",
                                                           (obj[0], obj[3], obj[2])))
-                m.addAction("Görüntüyü kaydet…",
+                m.addAction(_("Görüntüyü kaydet…"),
                             lambda: self.on_image_command("save",
                                                           (obj[0], obj[3], obj[2])))
             m.addSeparator()
         blocks = [b for b in self.view.blocks_for(pno) if pymupdf.Point(point) in b.bbox]
         if blocks:
             blk = min(blocks, key=lambda b: b.bbox.get_area())
-            m.addAction("Bu metni düzenle…",
+            m.addAction(_("Bu metni düzenle…"),
                         lambda: self.on_edit_text(pno, blk.bbox, blk.text, blk.style))
         m.addSeparator()
         m.addAction(self.act_page_insert)
-        m.addAction("Bu sayfayı sil", lambda: self._delete_pages([pno]))
-        m.addAction("Bu sayfayı çoğalt", lambda: pageops.duplicate_pages(self.document,
+        m.addAction(_("Bu sayfayı sil"), lambda: self._delete_pages([pno]))
+        m.addAction(_("Bu sayfayı çoğalt"), lambda: pageops.duplicate_pages(self.document,
                                                                         [pno]))
         m.addSeparator()
         m.addAction(self.act_print_area)
@@ -1288,14 +1299,14 @@ class MainWindow(QMainWindow):
                 if old:
                     im.move_resize_image(self.document, pno, old, rect)
             elif kind == "widget":
-                with self.document.edit("Form alanını taşı", pages=[pno]) as doc:
+                with self.document.edit(_("Form alanını taşı"), pages=[pno]) as doc:
                     for w in doc[pno].widgets():
                         if w.xref == ref:
                             w.rect = pymupdf.Rect(rect)
                             w.update()
                             break
         except Exception as exc:
-            QMessageBox.critical(self, "Taşınamadı", str(exc))
+            QMessageBox.critical(self, _("Taşınamadı"), str(exc))
 
     def _image_rect(self, pno: int, xref: int):
         for img in im.list_images(self.document, pno):
@@ -1319,12 +1330,12 @@ class MainWindow(QMainWindow):
                 if old:
                     im.move_resize_image(self.document, pno, old, data["rect"])
         except Exception as exc:
-            QMessageBox.critical(self, "Güncellenemedi", str(exc))
+            QMessageBox.critical(self, _("Güncellenemedi"), str(exc))
 
     def delete_selected_object(self):
         obj = self.view.selected_object
         if not obj:
-            self.statusBar().showMessage("Önce bir nesne seçin", 3000)
+            self.statusBar().showMessage(_("Önce bir nesne seçin"), 3000)
             return
         pno, kind, rect, ref = obj
         try:
@@ -1335,7 +1346,7 @@ class MainWindow(QMainWindow):
             elif kind == "image":
                 im.delete_image(self.document, pno, rect)
         except Exception as exc:
-            QMessageBox.critical(self, "Silinemedi", str(exc))
+            QMessageBox.critical(self, _("Silinemedi"), str(exc))
             return
         self.view.selected_object = None
         self.inspector.set_object(None)
@@ -1368,11 +1379,11 @@ class MainWindow(QMainWindow):
         if not pages:
             return
         if self.document.page_count - len(pages) < 1:
-            QMessageBox.warning(self, "Silinemez", "Belgede en az bir sayfa kalmalı.")
+            QMessageBox.warning(self, _("Silinemez"), _("Belgede en az bir sayfa kalmalı."))
             return
         res = QMessageBox.question(
-            self, "Sayfaları sil",
-            f"{len(pages)} sayfa silinecek. Devam edilsin mi?",
+            self, _("Sayfaları sil"),
+            _n("{0} sayfa silinecek. Devam edilsin mi?", len(pages)).format(len(pages)),
             QMessageBox.Yes | QMessageBox.No)
         if res == QMessageBox.Yes:
             pageops.delete_pages(self.document, pages)
@@ -1392,7 +1403,7 @@ class MainWindow(QMainWindow):
 
     def page_resize(self):
         d = dlg.InsertPageDialog(self.document.page_count, self.view.current_page, self)
-        d.setWindowTitle("Sayfa boyutunu değiştir")
+        d.setWindowTitle(_("Sayfa boyutunu değiştir"))
         d.count.setEnabled(False)
         d.where.setEnabled(False)
         if d.exec():
@@ -1402,21 +1413,21 @@ class MainWindow(QMainWindow):
 
     def page_extract(self):
         pages = self._target_pages()
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Sayfaları PDF olarak kaydet",
-            os.path.splitext(self.document.path or "belge")[0] + "_secim.pdf", PDF_FILTER)
+        path, _x = QFileDialog.getSaveFileName(
+            self, _("Sayfaları PDF olarak kaydet"),
+            os.path.splitext(self.document.path or "belge")[0] + "_secim.pdf", _(PDF_FILTER))
         if not path:
             return
         pageops.extract_pages(self.document, pages, path)
-        self.statusBar().showMessage(f"{len(pages)} sayfa kaydedildi: {path}", 5000)
+        self.statusBar().showMessage(_n("{0} sayfa kaydedildi: {path}", len(pages)).format(len(pages), path=path), 5000)
 
     def page_merge(self):
-        paths, _ = QFileDialog.getOpenFileNames(self, "Birleştirilecek PDF'ler", "",
-                                                PDF_FILTER)
+        paths, _x = QFileDialog.getOpenFileNames(self, _("Birleştirilecek PDF'ler"), "",
+                                                _(PDF_FILTER))
         if not paths:
             return
         where = QMessageBox.question(
-            self, "Birleştir", "Seçilen dosyalar nereye eklensin?",
+            self, _("Birleştir"), _("Seçilen dosyalar nereye eklensin?\nEvet: sona · Hayır: geçerli sayfaya"),
             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
         if where == QMessageBox.Cancel:
             return
@@ -1425,16 +1436,16 @@ class MainWindow(QMainWindow):
         try:
             n = pageops.merge_files(self.document, paths, at)
         except Exception as exc:
-            QMessageBox.critical(self, "Birleştirilemedi", str(exc))
+            QMessageBox.critical(self, _("Birleştirilemedi"), str(exc))
             return
-        self.statusBar().showMessage(f"{n} sayfa eklendi", 5000)
+        self.statusBar().showMessage(_n("{n} sayfa eklendi", n).format(n=n), 5000)
 
     def page_add_images(self):
-        paths, _ = QFileDialog.getOpenFileNames(self, "Görüntü seç", "", IMAGE_FILTER)
+        paths, _x = QFileDialog.getOpenFileNames(self, _("Görüntü seç"), "", _(IMAGE_FILTER))
         if paths:
             n = pageops.insert_images_as_pages(self.document, paths,
                                                self.view.current_page + 1)
-            self.statusBar().showMessage(f"{n} sayfa eklendi", 4000)
+            self.statusBar().showMessage(_n("{n} sayfa eklendi", n).format(n=n), 4000)
 
     def page_split(self):
         d = dlg.SplitDialog(self.document.page_count, self)
@@ -1449,10 +1460,10 @@ class MainWindow(QMainWindow):
             else:
                 files = pageops.split_by_ranges(self.document, v["ranges"], out_dir, stem)
         except Exception as exc:
-            QMessageBox.critical(self, "Bölünemedi", str(exc))
+            QMessageBox.critical(self, _("Bölünemedi"), str(exc))
             return
-        QMessageBox.information(self, "Tamamlandı",
-                                f"{len(files)} dosya oluşturuldu:\n{out_dir}")
+        QMessageBox.information(self, _("Tamamlandı"),
+                                _n("{0} dosya oluşturuldu:\n{out_dir}", len(files)).format(len(files), out_dir=out_dir))
 
     def on_reorder(self, order: list):
         if order == list(range(self.document.page_count)):
@@ -1474,18 +1485,18 @@ class MainWindow(QMainWindow):
                 idx = pages[0] if cmd == "insert_before" else pages[-1] + 1
                 pageops.insert_blank(self.document, idx, w, h, 1)
             elif cmd == "extract":
-                path, _ = QFileDialog.getSaveFileName(self, "PDF olarak kaydet",
-                                                      "secim.pdf", PDF_FILTER)
+                path, _x = QFileDialog.getSaveFileName(self, _("PDF olarak kaydet"),
+                                                      "secim.pdf", _(PDF_FILTER))
                 if path:
                     pageops.extract_pages(self.document, pages, path)
             elif cmd == "export_image":
-                out = QFileDialog.getExistingDirectory(self, "Hedef klasör")
+                out = QFileDialog.getExistingDirectory(self, _("Hedef klasör"))
                 if out:
                     files = exporting.export_images(self.document, out, pages=pages,
                                                     dpi=200)
-                    self.statusBar().showMessage(f"{len(files)} görüntü kaydedildi", 4000)
+                    self.statusBar().showMessage(_n("{0} görüntü kaydedildi", len(files)).format(len(files)), 4000)
         except Exception as exc:
-            QMessageBox.critical(self, "İşlem başarısız", str(exc))
+            QMessageBox.critical(self, _("İşlem başarısız"), str(exc))
 
     # ================================================================== ekleme
     def insert_watermark(self):
@@ -1513,11 +1524,11 @@ class MainWindow(QMainWindow):
                                             opacity=v["image_opacity"],
                                             scale=v["scale"], behind=v["behind"])
         except Exception as exc:
-            QMessageBox.critical(self, "Filigran eklenemedi", str(exc))
+            QMessageBox.critical(self, _("Filigran eklenemedi"), str(exc))
 
     def _watermark_with_font(self, v: dict, alias: str, fontfile: str):
         """Unicode yazı tipi gerektiren filigranlar için özel yol."""
-        with self.document.edit("Filigran ekle", structural=True) as doc:
+        with self.document.edit(_("Filigran ekle"), structural=True) as doc:
             font = pymupdf.Font(fontfile=fontfile)
             for pno in v["pages"]:
                 page = doc[pno]
@@ -1548,10 +1559,10 @@ class MainWindow(QMainWindow):
                                           footer=v["footer"], fontsize=v["size"],
                                           color=v["color"], margin=v["margin"] - 12)
         except Exception as exc:
-            QMessageBox.critical(self, "Eklenemedi", str(exc))
+            QMessageBox.critical(self, _("Eklenemedi"), str(exc))
 
     def insert_attachment(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Eklenecek dosya", "")
+        path, _x = QFileDialog.getOpenFileName(self, _("Eklenecek dosya"), "")
         if not path:
             return
         page = self.document.page(self.view.current_page)
@@ -1564,24 +1575,24 @@ class MainWindow(QMainWindow):
         fm.set_value(self.document, pno, xref, value)
 
     def form_export(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Form değerlerini kaydet",
+        path, _x = QFileDialog.getSaveFileName(self, _("Form değerlerini kaydet"),
                                               "form.json", "JSON (*.json)")
         if path:
             fm.export_json(self.document, path)
-            self.statusBar().showMessage(f"Kaydedildi: {path}", 4000)
+            self.statusBar().showMessage(_("Kaydedildi: {path}").format(path=path), 4000)
 
     def form_import(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Form değerlerini yükle", "",
+        path, _x = QFileDialog.getOpenFileName(self, _("Form değerlerini yükle"), "",
                                               "JSON (*.json)")
         if path:
             n = fm.import_json(self.document, path)
             self.forms_panel.reload()
-            self.statusBar().showMessage(f"{n} alan dolduruldu", 4000)
+            self.statusBar().showMessage(_n("{n} alan dolduruldu", n).format(n=n), 4000)
 
     def form_flatten(self):
         res = QMessageBox.question(
-            self, "Formu düzleştir",
-            "Form alanları sayfa içeriğine gömülecek ve artık düzenlenemeyecek. Devam?",
+            self, _("Formu düzleştir"),
+            _("Form alanları sayfa içeriğine gömülecek ve artık düzenlenemeyecek. Devam?"),
             QMessageBox.Yes | QMessageBox.No)
         if res == QMessageBox.Yes:
             fm.flatten_forms(self.document)
@@ -1591,12 +1602,11 @@ class MainWindow(QMainWindow):
         areas = self.view.pending_redactions
         if not areas:
             self.statusBar().showMessage(
-                "Bekleyen karartma yok — önce Karart aracıyla alan çizin", 4000)
+                _("Bekleyen karartma yok — önce Karart aracıyla alan çizin"), 4000)
             return
         res = QMessageBox.warning(
-            self, "Karartmaları uygula",
-            f"{len(areas)} alandaki metin ve görüntüler KALICI olarak silinecek.\n"
-            "Belgeyi kaydettikten sonra bu içerik geri getirilemez.",
+            self, _("Karartmaları uygula"),
+            _n("{0} alandaki metin ve görüntüler KALICI olarak silinecek.\nBelgeyi kaydettikten sonra bu içerik geri getirilemez.", len(areas)).format(len(areas)),
             QMessageBox.Yes | QMessageBox.No)
         if res != QMessageBox.Yes:
             return
@@ -1604,34 +1614,34 @@ class MainWindow(QMainWindow):
             te.redact_areas(self.document, areas,
                             fill=self.view.settings.redact_fill)
         except Exception as exc:
-            QMessageBox.critical(self, "Uygulanamadı", str(exc))
+            QMessageBox.critical(self, _("Uygulanamadı"), str(exc))
             return
         self.view.clear_pending_redactions()
         self._update_actions()
-        self.statusBar().showMessage("Karartmalar uygulandı", 5000)
+        self.statusBar().showMessage(_("Karartmalar uygulandı"), 5000)
 
     def flatten_annots(self):
         res = QMessageBox.question(
-            self, "Açıklamaları düzleştir",
-            "Tüm açıklamalar sayfa içeriğine gömülecek. Devam?",
+            self, _("Açıklamaları düzleştir"),
+            _("Tüm açıklamalar sayfa içeriğine gömülecek. Devam?"),
             QMessageBox.Yes | QMessageBox.No)
         if res == QMessageBox.Yes:
             an.flatten(self.document, annots=True, widgets=False)
 
     def clear_annots(self):
-        res = QMessageBox.question(self, "Açıklamaları kaldır",
-                                   "Belgedeki tüm açıklamalar silinecek. Devam?",
+        res = QMessageBox.question(self, _("Açıklamaları kaldır"),
+                                   _("Belgedeki tüm açıklamalar silinecek. Devam?"),
                                    QMessageBox.Yes | QMessageBox.No)
         if res == QMessageBox.Yes:
             n = an.clear_annots(self.document)
-            self.statusBar().showMessage(f"{n} açıklama silindi", 4000)
+            self.statusBar().showMessage(_n("{n} açıklama silindi", n).format(n=n), 4000)
 
     def tools_ocr(self):
         d = dlg.OcrDialog(self.document.page_count, self.view.current_page, self)
         if not d.exec():
             return
         v = d.values()
-        prog = QProgressDialog("OCR uygulanıyor…", "İptal", 0, len(v["pages"]), self)
+        prog = QProgressDialog(_("OCR uygulanıyor…"), _("İptal"), 0, len(v["pages"]), self)
         prog.setWindowModality(Qt.WindowModal)
         prog.setMinimumDuration(0)
 
@@ -1644,10 +1654,10 @@ class MainWindow(QMainWindow):
                                 dpi=v["dpi"], progress=cb)
         except Exception as exc:
             prog.close()
-            QMessageBox.critical(self, "OCR başarısız", str(exc))
+            QMessageBox.critical(self, _("OCR başarısız"), str(exc))
             return
         prog.close()
-        self.statusBar().showMessage("OCR tamamlandı", 5000)
+        self.statusBar().showMessage(_("OCR tamamlandı"), 5000)
 
     def tools_compress(self):
         d = dlg.CompressDialog(self)
@@ -1655,8 +1665,8 @@ class MainWindow(QMainWindow):
             return
         v = d.values()
         base = os.path.splitext(self.document.path or "belge")[0]
-        path, _ = QFileDialog.getSaveFileName(self, "Küçültülmüş PDF",
-                                              base + "_kucuk.pdf", PDF_FILTER)
+        path, _x = QFileDialog.getSaveFileName(self, _("Küçültülmüş PDF"),
+                                              base + "_kucuk.pdf", _(PDF_FILTER))
         if not path:
             return
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -1667,23 +1677,22 @@ class MainWindow(QMainWindow):
                                                subset_fonts=v["subset"])
         except Exception as exc:
             QApplication.restoreOverrideCursor()
-            QMessageBox.critical(self, "Küçültülemedi", str(exc))
+            QMessageBox.critical(self, _("Küçültülemedi"), str(exc))
             return
         QApplication.restoreOverrideCursor()
         pct = (1 - after / before) * 100 if before else 0
         QMessageBox.information(
-            self, "Tamamlandı",
-            f"Önce: {before / 1e6:.2f} MB\nSonra: {after / 1e6:.2f} MB\n"
-            f"Kazanç: %{pct:.1f}\n\n{path}")
+            self, _("Tamamlandı"),
+            _("Önce: {0:.2f} MB\nSonra: {1:.2f} MB\nKazanç: %{pct:.1f}\n\n{path}").format(before / 1e6, after / 1e6, pct=pct, path=path))
 
     def tools_sanitize(self):
         res = QMessageBox.question(
-            self, "Gizlilik temizliği",
-            "Meta veri, JavaScript ve otomatik eylemler kaldırılsın mı?",
+            self, _("Gizlilik temizliği"),
+            _("Meta veri, JavaScript ve otomatik eylemler kaldırılsın mı?"),
             QMessageBox.Yes | QMessageBox.No)
         if res == QMessageBox.Yes:
             security.sanitize(self.document, remove_metadata=True, remove_js=True)
-            self.statusBar().showMessage("Belge temizlendi", 4000)
+            self.statusBar().showMessage(_("Belge temizlendi"), 4000)
 
     def tools_encrypt(self):
         d = dlg.SecurityDialog(security.current_permissions(self.document), self)
@@ -1691,8 +1700,8 @@ class MainWindow(QMainWindow):
             return
         v = d.values()
         base = os.path.splitext(self.document.path or "belge")[0]
-        path, _ = QFileDialog.getSaveFileName(self, "Şifreli kaydet",
-                                              base + "_korumali.pdf", PDF_FILTER)
+        path, _x = QFileDialog.getSaveFileName(self, _("Şifreli kaydet"),
+                                              base + "_korumali.pdf", _(PDF_FILTER))
         if not path:
             return
         try:
@@ -1700,22 +1709,22 @@ class MainWindow(QMainWindow):
                                     owner_pw=v["owner_pw"], allowed=v["allowed"],
                                     method=v["method"])
         except Exception as exc:
-            QMessageBox.critical(self, "Kaydedilemedi", str(exc))
+            QMessageBox.critical(self, _("Kaydedilemedi"), str(exc))
             return
-        QMessageBox.information(self, "Tamamlandı", f"Şifreli kopya kaydedildi:\n{path}")
+        QMessageBox.information(self, _("Tamamlandı"), _("Şifreli kopya kaydedildi:\n{path}").format(path=path))
 
     def tools_decrypt(self):
         base = os.path.splitext(self.document.path or "belge")[0]
-        path, _ = QFileDialog.getSaveFileName(self, "Şifresiz kaydet",
-                                              base + "_acik.pdf", PDF_FILTER)
+        path, _x = QFileDialog.getSaveFileName(self, _("Şifresiz kaydet"),
+                                              base + "_acik.pdf", _(PDF_FILTER))
         if not path:
             return
         try:
             security.save_decrypted(self.document, path)
         except Exception as exc:
-            QMessageBox.critical(self, "Kaydedilemedi", str(exc))
+            QMessageBox.critical(self, _("Kaydedilemedi"), str(exc))
             return
-        QMessageBox.information(self, "Tamamlandı", f"Kaydedildi:\n{path}")
+        QMessageBox.information(self, _("Tamamlandı"), _("Kaydedildi:\n{path}").format(path=path))
 
     def tools_doc_info(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -1732,7 +1741,7 @@ class MainWindow(QMainWindow):
         finally:
             QApplication.restoreOverrideCursor()
         n = len(FontManager.instance().families())
-        QMessageBox.information(self, "Yazı tipleri", f"{n} yazı tipi ailesi bulundu.")
+        QMessageBox.information(self, _("Yazı tipleri"), _n("{n} yazı tipi ailesi bulundu.", n).format(n=n))
 
     # ================================================================ dışa aktar
     def export_images(self):
@@ -1740,11 +1749,11 @@ class MainWindow(QMainWindow):
         if not d.exec():
             return
         v = d.values()
-        out = v["out_dir"] or QFileDialog.getExistingDirectory(self, "Hedef klasör")
+        out = v["out_dir"] or QFileDialog.getExistingDirectory(self, _("Hedef klasör"))
         if not out:
             return
         stem = os.path.splitext(os.path.basename(self.document.path or "sayfa"))[0]
-        prog = QProgressDialog("Dışa aktarılıyor…", "İptal", 0, len(v["pages"]), self)
+        prog = QProgressDialog(_("Dışa aktarılıyor…"), _("İptal"), 0, len(v["pages"]), self)
         prog.setWindowModality(Qt.WindowModal)
 
         def cb(done, total):
@@ -1758,32 +1767,34 @@ class MainWindow(QMainWindow):
                                             progress=cb)
         except Exception as exc:
             prog.close()
-            QMessageBox.critical(self, "Dışa aktarılamadı", str(exc))
+            QMessageBox.critical(self, _("Dışa aktarılamadı"), str(exc))
             return
         prog.close()
-        QMessageBox.information(self, "Tamamlandı",
-                                f"{len(files)} dosya kaydedildi:\n{out}")
+        QMessageBox.information(self, _("Tamamlandı"),
+                                _n("{0} dosya kaydedildi:\n{out}", len(files)).format(len(files), out=out))
 
     def export_text(self):
-        mode_name, ok = QInputDialog.getItem(self, "Metin dışa aktar", "Biçim:",
-                                             list(exporting.TEXT_MODES), 0, False)
-        if not ok:
+        keys = list(exporting.TEXT_MODES)
+        labels = [_(k) for k in keys]
+        mode_name, ok = QInputDialog.getItem(self, _("Metin dışa aktar"), _("Biçim:"),
+                                             labels, 0, False)
+        if not ok or mode_name not in labels:
             return
-        mode, ext = exporting.TEXT_MODES[mode_name]
+        mode, ext = exporting.TEXT_MODES[keys[labels.index(mode_name)]]
         base = os.path.splitext(self.document.path or "belge")[0]
-        path, _ = QFileDialog.getSaveFileName(self, "Kaydet", f"{base}.{ext}",
+        path, _x = QFileDialog.getSaveFileName(self, _("Kaydet"), f"{base}.{ext}",
                                               f"*.{ext}")
         if not path:
             return
         try:
             exporting.export_text(self.document, path, mode=mode)
         except Exception as exc:
-            QMessageBox.critical(self, "Dışa aktarılamadı", str(exc))
+            QMessageBox.critical(self, _("Dışa aktarılamadı"), str(exc))
             return
-        self.statusBar().showMessage(f"Kaydedildi: {path}", 5000)
+        self.statusBar().showMessage(_("Kaydedildi: {path}").format(path=path), 5000)
 
     def export_embedded_images(self):
-        out = QFileDialog.getExistingDirectory(self, "Görüntülerin kaydedileceği klasör")
+        out = QFileDialog.getExistingDirectory(self, _("Görüntülerin kaydedileceği klasör"))
         if not out:
             return
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -1791,8 +1802,8 @@ class MainWindow(QMainWindow):
             files = im.extract_all_images(self.document, out)
         finally:
             QApplication.restoreOverrideCursor()
-        QMessageBox.information(self, "Tamamlandı",
-                                f"{len(files)} görüntü kaydedildi:\n{out}")
+        QMessageBox.information(self, _("Tamamlandı"),
+                                _n("{0} görüntü kaydedildi:\n{out}", len(files)).format(len(files), out=out))
 
     def on_image_command(self, cmd: str, data):
         try:
@@ -1801,21 +1812,21 @@ class MainWindow(QMainWindow):
                 return
             pno, xref, rect = data
             if cmd == "save":
-                path, _ = QFileDialog.getSaveFileName(self, "Görüntüyü kaydet",
+                path, _x = QFileDialog.getSaveFileName(self, _("Görüntüyü kaydet"),
                                                       f"gorsel_{xref}.png",
-                                                      "Görüntüler (*.png *.jpg)")
+                                                      _("Görüntüler (*.png *.jpg)"))
                 if path:
                     real = im.extract_image(self.document, xref, path)
-                    self.statusBar().showMessage(f"Kaydedildi: {real}", 4000)
+                    self.statusBar().showMessage(_("Kaydedildi: {real}").format(real=real), 4000)
             elif cmd == "replace":
-                path, _ = QFileDialog.getOpenFileName(self, "Yeni görüntü", "",
-                                                      IMAGE_FILTER)
+                path, _x = QFileDialog.getOpenFileName(self, _("Yeni görüntü"), "",
+                                                      _(IMAGE_FILTER))
                 if path:
                     im.replace_image(self.document, pno, rect, path)
             elif cmd == "delete":
                 im.delete_image(self.document, pno, rect)
         except Exception as exc:
-            QMessageBox.critical(self, "İşlem başarısız", str(exc))
+            QMessageBox.critical(self, _("İşlem başarısız"), str(exc))
 
     # =================================================================== görünüm
     def toggle_sidebar(self):
@@ -1834,41 +1845,102 @@ class MainWindow(QMainWindow):
         self.view.show_text_boxes = self.act_text_boxes.isChecked()
         self.view.viewport().update()
 
+    # ====================================================================== dil
+    def _build_language_menu(self, parent_menu):
+        from .. import i18n
+        menu = parent_menu.addMenu(icons.icon("globe", self.colors["icon"], 18), _("Dil"))
+        self.language_menu = menu
+        group = QActionGroup(self)
+        group.setExclusive(True)
+        pref = i18n.saved_preference()
+        system_name = i18n.LANGUAGES[i18n.system_language()]
+        # Dil adları kendi dillerinde yazılır: kullanıcı anlamadığı bir dile
+        # geçse bile kendi dilini listede tanıyabilsin.
+        entries = [(i18n.SYSTEM, _("Sistem dili ({0})").format(system_name))]
+        entries += list(i18n.LANGUAGES.items())
+        for code, label in entries:
+            act = QAction(label, self)
+            act.setCheckable(True)
+            act.setChecked(code == pref)
+            act.setData(code)
+            act.triggered.connect(lambda _c=False, c=code: self.change_language(c))
+            group.addAction(act)
+            menu.addAction(act)
+            if code == i18n.SYSTEM:
+                menu.addSeparator()
+
+    def change_language(self, code: str):
+        from .. import i18n
+        before = i18n.current()
+        i18n.save_preference(code)
+        after = i18n.resolve(code)
+        if after == before:
+            self.statusBar().showMessage(_("Dil tercihi kaydedildi"), 3000)
+            return
+        tr = lambda text: i18n.translate_to(after, text)  # noqa: E731
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Question)
+        box.setWindowTitle(tr("Dil"))
+        box.setText(tr("Dil değişikliği uygulama yeniden başlatıldığında geçerli olur."))
+        box.setInformativeText(tr("Şimdi yeniden başlatılsın mı?"))
+        now = box.addButton(tr("Şimdi yeniden başlat"), QMessageBox.AcceptRole)
+        box.addButton(tr("Daha sonra"), QMessageBox.RejectRole)
+        box.setDefaultButton(now)
+        box.exec()
+        if box.clickedButton() is now:
+            self.restart_app()
+
+    def restart_app(self):
+        """Uygulamayı (açık belgeyle birlikte) yeniden başlatır."""
+        if not self._confirm_discard():
+            return
+        args = [self.document.path] if (self.document.is_open and self.document.path) else []
+        if getattr(sys, "frozen", False):
+            program, pargs = sys.executable, args
+            workdir = os.path.dirname(sys.executable)
+        else:
+            program, pargs = sys.executable, ["-m", "pdfstudio"] + args
+            workdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        result = QProcess.startDetached(program, pargs, workdir)
+        ok = result[0] if isinstance(result, tuple) else bool(result)
+        if not ok:
+            QMessageBox.warning(self, _("Dil"),
+                                _("Uygulama yeniden başlatılamadı. Lütfen kapatıp yeniden açın."))
+            return
+        self._restarting = True
+        self.close()
+
     # ==================================================================== yardım
     def help_about(self):
         QMessageBox.about(
-            self, f"{APP_NAME} hakkında",
-            f"<h3>{APP_NAME_TR} {APP_VERSION}</h3>"
-            f"<p><i>{APP_NAME_EN}</i></p>"
-            "<p>Windows ve Linux üzerinde çalışan, ayrıntılı PDF düzenleme uygulaması.</p>"
-            "<p>Motor: <b>PyMuPDF (MuPDF)</b> · Arayüz: <b>PySide6 (Qt 6)</b></p>"
-            f"<p>PyMuPDF {pymupdf.__version__}</p>")
+            self, _("{APP_NAME} hakkında").format(APP_NAME=APP_NAME),
+            _("<h3>{APP_NAME_TR} {APP_VERSION}</h3><p><i>{APP_NAME_EN}</i></p><p>Windows ve Linux üzerinde çalışan, ayrıntılı PDF düzenleme uygulaması.</p><p>Motor: <b>PyMuPDF (MuPDF)</b> · Arayüz: <b>PySide6 (Qt 6)</b></p><p>PyMuPDF {0}</p>").format(pymupdf.__version__, APP_NAME_TR=APP_NAME_TR, APP_VERSION=APP_VERSION, APP_NAME_EN=APP_NAME_EN))
 
     def help_shortcuts(self):
         rows = [
-            ("Ctrl+O / Ctrl+S", "Aç / Kaydet"),
-            ("Ctrl+Shift+S", "Farklı kaydet"),
-            ("Ctrl+Z / Ctrl+Y", "Geri al / Yinele"),
-            ("Ctrl+F / F3", "Bul / sonraki sonuç"),
-            ("Ctrl+P", "Yazdır"),
-            ("Ctrl+Shift+P", "Seçili alanı yazdır"),
-            ("Ctrl+= / Ctrl+-", "Yakınlaştır / uzaklaştır"),
-            ("Ctrl+0 / 1 / 2", "%100 / genişliğe / sayfaya sığdır"),
-            ("Ctrl+Fare tekerleği", "Sürekli yakınlaştırma"),
-            ("PgUp / PgDn", "Sayfa değiştir"),
-            ("V H E T", "Seç · El · Metni düzenle · Metin ekle"),
-            ("D R L A", "Çizim · Dikdörtgen · Çizgi · Ok"),
-            ("N S I K", "Not · İmza · Görüntü · Bağlantı"),
-            ("C M", "Kırp · Ölç"),
-            ("Ctrl+Shift+R", "Karartmaları uygula"),
-            ("F9 / F10 / F11", "Kenar çubuğu / özellikler / tam ekran"),
-            ("Shift+Sürükle", "Sayfayı kaydır"),
-            ("Ok tuşları", "Seçili nesneyi taşı"),
-            ("Esc", "Seçimi/çizimi iptal et"),
+            ("Ctrl+O / Ctrl+S", _("Aç / Kaydet")),
+            ("Ctrl+Shift+S", _("Farklı kaydet")),
+            ("Ctrl+Z / Ctrl+Y", _("Geri al / Yinele")),
+            ("Ctrl+F / F3", _("Bul / sonraki sonuç")),
+            ("Ctrl+P", _("Yazdır")),
+            ("Ctrl+Shift+P", _("Seçili alanı yazdır")),
+            ("Ctrl+= / Ctrl+-", _("Yakınlaştır / uzaklaştır")),
+            ("Ctrl+0 / 1 / 2", _("%100 / genişliğe / sayfaya sığdır")),
+            (_("Ctrl+Fare tekerleği"), _("Sürekli yakınlaştırma")),
+            ("PgUp / PgDn", _("Sayfa değiştir")),
+            ("V H E T", _("Seç · El · Metni düzenle · Metin ekle")),
+            ("D R L A", _("Çizim · Dikdörtgen · Çizgi · Ok")),
+            ("N S I K", _("Not · İmza · Görüntü · Bağlantı")),
+            ("C M", _("Kırp · Ölç")),
+            ("Ctrl+Shift+R", _("Karartmaları uygula")),
+            ("F9 / F10 / F11", _("Kenar çubuğu / özellikler / tam ekran")),
+            (_("Shift+Sürükle"), _("Sayfayı kaydır")),
+            (_("Ok tuşları"), _("Seçili nesneyi taşı")),
+            ("Esc", _("Seçimi/çizimi iptal et")),
         ]
         html = "<table cellpadding=5>" + "".join(
             f"<tr><td><b>{k}</b></td><td>{v}</td></tr>" for k, v in rows) + "</table>"
-        QMessageBox.information(self, "Klavye kısayolları", html)
+        QMessageBox.information(self, _("Klavye kısayolları"), html)
 
     # ================================================================ sürükle-bırak
     def dragEnterEvent(self, event):
@@ -1904,7 +1976,8 @@ class MainWindow(QMainWindow):
             self.inspector.author_edit.setText(author)
 
     def closeEvent(self, event):
-        if not self._confirm_discard():
+        # Yeniden başlatmada kaydetme sorusu zaten soruldu
+        if not getattr(self, "_restarting", False) and not self._confirm_discard():
             event.ignore()
             return
         self.settings_store.setValue("geometry", self.saveGeometry())

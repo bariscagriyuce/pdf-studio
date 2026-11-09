@@ -6,14 +6,16 @@ from dataclasses import dataclass
 
 import pymupdf
 
+from ..i18n import N_, _
+
 FIELD_TYPE_NAMES = {
-    pymupdf.PDF_WIDGET_TYPE_BUTTON: "Düğme",
-    pymupdf.PDF_WIDGET_TYPE_CHECKBOX: "Onay kutusu",
-    pymupdf.PDF_WIDGET_TYPE_COMBOBOX: "Açılır liste",
-    pymupdf.PDF_WIDGET_TYPE_LISTBOX: "Liste",
-    pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON: "Seçenek düğmesi",
-    pymupdf.PDF_WIDGET_TYPE_SIGNATURE: "İmza",
-    pymupdf.PDF_WIDGET_TYPE_TEXT: "Metin kutusu",
+    pymupdf.PDF_WIDGET_TYPE_BUTTON: N_("Düğme"),
+    pymupdf.PDF_WIDGET_TYPE_CHECKBOX: N_("Onay kutusu"),
+    pymupdf.PDF_WIDGET_TYPE_COMBOBOX: N_("Açılır liste"),
+    pymupdf.PDF_WIDGET_TYPE_LISTBOX: N_("Liste"),
+    pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON: N_("Seçenek düğmesi"),
+    pymupdf.PDF_WIDGET_TYPE_SIGNATURE: N_("İmza"),
+    pymupdf.PDF_WIDGET_TYPE_TEXT: N_("Metin kutusu"),
 }
 
 
@@ -52,7 +54,7 @@ def list_fields(document, pno: int | None = None) -> list[FieldInfo]:
             out.append(FieldInfo(
                 pno=i, xref=w.xref, name=w.field_name or "",
                 label=w.field_label or w.field_name or "",
-                type_id=w.field_type, type_name=FIELD_TYPE_NAMES.get(w.field_type, "Alan"),
+                type_id=w.field_type, type_name=_(FIELD_TYPE_NAMES.get(w.field_type, N_("Alan"))),
                 value="" if w.field_value is None else str(w.field_value),
                 options=list(w.choice_values or []),
                 rect=pymupdf.Rect(w.rect),
@@ -71,7 +73,7 @@ def field_at(document, pno: int, point):
 
 def set_value(document, pno: int, xref: int, value) -> bool:
     ok = False
-    with document.edit("Form alanını doldur", pages=[pno]) as doc:
+    with document.edit(_("Form alanını doldur"), pages=[pno]) as doc:
         for w in doc[pno].widgets():
             if w.xref != xref:
                 continue
@@ -88,7 +90,7 @@ def set_value(document, pno: int, xref: int, value) -> bool:
 def set_values(document, values: dict[str, object]) -> int:
     """{alan_adı: değer} sözlüğüne göre toplu doldurma."""
     n = 0
-    with document.edit("Formu doldur", structural=True) as doc:
+    with document.edit(_("Formu doldur"), structural=True) as doc:
         for pno in range(doc.page_count):
             for w in doc[pno].widgets():
                 if w.field_name in values:
@@ -129,7 +131,7 @@ def add_field(document, pno: int, rect, *, kind: str = "text", name: str = "alan
         "radio": pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON,
         "signature": pymupdf.PDF_WIDGET_TYPE_SIGNATURE,
     }
-    with document.edit("Form alanı ekle", pages=[pno]) as doc:
+    with document.edit(_("Form alanı ekle"), pages=[pno]) as doc:
         w = pymupdf.Widget()
         w.rect = pymupdf.Rect(rect)
         w.field_type = kinds.get(kind, pymupdf.PDF_WIDGET_TYPE_TEXT)
@@ -149,7 +151,7 @@ def add_field(document, pno: int, rect, *, kind: str = "text", name: str = "alan
 
 
 def delete_field(document, pno: int, xref: int) -> None:
-    with document.edit("Form alanını sil", pages=[pno]) as doc:
+    with document.edit(_("Form alanını sil"), pages=[pno]) as doc:
         page = doc[pno]
         for a in list(page.annots(types=[pymupdf.PDF_ANNOT_WIDGET])):
             if a.xref == xref:
@@ -158,5 +160,5 @@ def delete_field(document, pno: int, xref: int) -> None:
 
 
 def flatten_forms(document) -> None:
-    with document.edit("Formu düzleştir", structural=True) as doc:
+    with document.edit(_("Formu düzleştir"), structural=True) as doc:
         doc.bake(annots=False, widgets=True)

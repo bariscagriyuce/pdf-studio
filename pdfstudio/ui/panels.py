@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QHBoxLay
                                QTableWidgetItem, QToolButton, QTreeWidget,
                                QTreeWidgetItem, QVBoxLayout, QWidget)
 
+from ..i18n import _, _n  # noqa: F401
 from . import icons
 from .widgets import HLine
 
@@ -31,10 +32,10 @@ class ThumbnailPanel(QWidget):
         bar.setContentsMargins(8, 6, 8, 6)
         bar.setSpacing(5)
         self.size_box = QComboBox()
-        self.size_box.addItems(["Küçük", "Orta", "Büyük"])
+        self.size_box.addItems([_("Küçük"), _("Orta"), _("Büyük")])
         self.size_box.setCurrentIndex(1)
         self.size_box.currentIndexChanged.connect(self._resize_icons)
-        bar.addWidget(QLabel("Boyut"))
+        bar.addWidget(QLabel(_("Boyut")))
         bar.addWidget(self.size_box, 1)
         lay.addLayout(bar)
         lay.addWidget(HLine())
@@ -96,7 +97,7 @@ class ThumbnailPanel(QWidget):
         if not self._pending or not self.document.is_open:
             self._timer.stop()
             return
-        for _ in range(2):
+        for _x in range(2):
             if not self._pending:
                 break
             pno = self._pending.pop(0)
@@ -145,23 +146,23 @@ class ThumbnailPanel(QWidget):
             pages = [int(item.data(Qt.UserRole))]
         m = QMenu(self)
         entries = [
-            ("Sola döndür", "rotate-left", "rotate_left"),
-            ("Sağa döndür", "rotate-right", "rotate_right"),
+            (_("Sola döndür"), "rotate-left", "rotate_left"),
+            (_("Sağa döndür"), "rotate-right", "rotate_right"),
             (None, None, None),
-            ("Boş sayfa ekle (önüne)", "page-add", "insert_before"),
-            ("Boş sayfa ekle (arkasına)", "page-add", "insert_after"),
-            ("Çoğalt", "page-copy", "duplicate"),
-            ("PDF olarak dışa aktar", "extract", "extract"),
-            ("Görüntü olarak kaydet", "image", "export_image"),
+            (_("Boş sayfa ekle (önüne)"), "page-add", "insert_before"),
+            (_("Boş sayfa ekle (arkasına)"), "page-add", "insert_after"),
+            (_("Çoğalt"), "page-copy", "duplicate"),
+            (_("PDF olarak dışa aktar"), "extract", "extract"),
+            (_("Görüntü olarak kaydet"), "image", "export_image"),
             (None, None, None),
-            ("Sil", "page-delete", "delete"),
+            (_("Sil"), "page-delete", "delete"),
         ]
         for label, ic, cmd in entries:
             if label is None:
                 m.addSeparator()
                 continue
             act = QAction(icons.icon(ic, "#c7cedd", 18), label, m)
-            act.triggered.connect(lambda _=False, c=cmd, p=pages: self.commandRequested.emit(c, p))
+            act.triggered.connect(lambda _x=False, c=cmd, p=pages: self.commandRequested.emit(c, p))
             m.addAction(act)
         m.exec(self.list.mapToGlobal(pos))
 
@@ -181,9 +182,9 @@ class OutlinePanel(QWidget):
         bar = QHBoxLayout()
         bar.setContentsMargins(8, 6, 8, 6)
         bar.setSpacing(5)
-        for name, tip, slot in (("plus", "Yer imi ekle", self.add_bookmark),
-                                ("text-edit", "Yeniden adlandır", self.rename_bookmark),
-                                ("trash", "Sil", self.delete_bookmark)):
+        for name, tip, slot in (("plus", _("Yer imi ekle"), self.add_bookmark),
+                                ("text-edit", _("Yeniden adlandır"), self.rename_bookmark),
+                                ("trash", _("Sil"), self.delete_bookmark)):
             b = QToolButton()
             b.setIcon(icons.icon(name, "#c7cedd", 17))
             b.setToolTip(tip)
@@ -208,7 +209,7 @@ class OutlinePanel(QWidget):
             level, title, page = entry[0], entry[1], entry[2]
             item = QTreeWidgetItem([f"{title}"])
             item.setData(0, Qt.UserRole, max(0, page - 1))
-            item.setToolTip(0, f"{title}  →  sayfa {page}")
+            item.setToolTip(0, _("{title}  →  sayfa {page}").format(title=title, page=page))
             while stack and stack[-1][0] >= level:
                 stack.pop()
             if stack:
@@ -231,8 +232,8 @@ class OutlinePanel(QWidget):
             return
         from PySide6.QtWidgets import QInputDialog
         cur = self.window().view.current_page
-        title, ok = QInputDialog.getText(self, "Yer imi ekle",
-                                         f"Sayfa {cur + 1} için başlık:")
+        title, ok = QInputDialog.getText(self, _("Yer imi ekle"),
+                                         _("Sayfa {0} için başlık:").format(cur + 1))
         if not ok or not title.strip():
             return
         toc = [list(e[:3]) for e in self.document.toc()]
@@ -246,7 +247,7 @@ class OutlinePanel(QWidget):
         if item is None:
             return
         from PySide6.QtWidgets import QInputDialog
-        title, ok = QInputDialog.getText(self, "Yeniden adlandır", "Başlık:",
+        title, ok = QInputDialog.getText(self, _("Yeniden adlandır"), _("Başlık:"),
                                          text=item.text(0))
         if not ok or not title.strip():
             return
@@ -283,19 +284,19 @@ class AnnotationPanel(QWidget):
 
         bar = QHBoxLayout()
         bar.setContentsMargins(8, 6, 8, 6)
-        self.count_label = QLabel("0 açıklama")
+        self.count_label = QLabel(_("0 açıklama"))
         self.count_label.setProperty("hint", True)
         bar.addWidget(self.count_label, 1)
         b = QToolButton()
         b.setIcon(icons.icon("trash", "#c7cedd", 17))
-        b.setToolTip("Seçili açıklamaları sil")
+        b.setToolTip(_("Seçili açıklamaları sil"))
         b.clicked.connect(self._delete)
         bar.addWidget(b)
         lay.addLayout(bar)
         lay.addWidget(HLine())
 
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Tür / İçerik", "Sayfa"])
+        self.tree.setHeaderLabels([_("Tür / İçerik"), _("Sayfa")])
         self.tree.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.tree.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
@@ -305,7 +306,7 @@ class AnnotationPanel(QWidget):
     def reload(self):
         self.tree.clear()
         if not self.document.is_open:
-            self.count_label.setText("0 açıklama")
+            self.count_label.setText(_("0 açıklama"))
             return
         from ..core import annots as an
         items = an.all_annots(self.document)
@@ -313,7 +314,7 @@ class AnnotationPanel(QWidget):
         for a in items:
             by_page.setdefault(a.pno, []).append(a)
         for pno in sorted(by_page):
-            parent = QTreeWidgetItem([f"Sayfa {pno + 1}", str(len(by_page[pno]))])
+            parent = QTreeWidgetItem([_("Sayfa {0}").format(pno + 1), str(len(by_page[pno]))])
             parent.setFirstColumnSpanned(False)
             self.tree.addTopLevelItem(parent)
             for a in by_page[pno]:
@@ -325,7 +326,7 @@ class AnnotationPanel(QWidget):
                     child.setToolTip(0, f"{a.author}\n{a.content}")
                 parent.addChild(child)
             parent.setExpanded(True)
-        self.count_label.setText(f"{len(items)} açıklama")
+        self.count_label.setText(_n("{0} açıklama", len(items)).format(len(items)))
 
     def _clicked(self, item, _col):
         data = item.data(0, Qt.UserRole)
@@ -355,35 +356,35 @@ class SearchPanel(QWidget):
         lay.setSpacing(7)
 
         self.query = QLineEdit()
-        self.query.setPlaceholderText("Aranacak metin…")
+        self.query.setPlaceholderText(_("Aranacak metin…"))
         self.query.setClearButtonEnabled(True)
         self.query.returnPressed.connect(self._search)
         lay.addWidget(self.query)
 
         opts = QHBoxLayout()
-        self.case = QCheckBox("Büyük/küçük")
-        self.whole = QCheckBox("Tam kelime")
+        self.case = QCheckBox(_("Büyük/küçük"))
+        self.whole = QCheckBox(_("Tam kelime"))
         opts.addWidget(self.case)
         opts.addWidget(self.whole)
         opts.addStretch(1)
         lay.addLayout(opts)
 
         row = QHBoxLayout()
-        btn = QPushButton("Ara")
+        btn = QPushButton(_("Ara"))
         btn.setProperty("accent", True)
         btn.clicked.connect(self._search)
         row.addWidget(btn, 1)
         lay.addLayout(row)
 
         lay.addWidget(HLine())
-        lay.addWidget(QLabel("Değiştir"))
+        lay.addWidget(QLabel(_("Değiştir")))
         self.replacement = QLineEdit()
-        self.replacement.setPlaceholderText("Yeni metin…")
+        self.replacement.setPlaceholderText(_("Yeni metin…"))
         lay.addWidget(self.replacement)
-        self.keep_style = QCheckBox("Özgün yazı tipi/rengi koru")
+        self.keep_style = QCheckBox(_("Özgün yazı tipi/rengi koru"))
         self.keep_style.setChecked(True)
         lay.addWidget(self.keep_style)
-        rep = QPushButton("Tümünü değiştir")
+        rep = QPushButton(_("Tümünü değiştir"))
         rep.clicked.connect(
             lambda: self.replaceRequested.emit(self.query.text(), self.replacement.text(),
                                                self.keep_style.isChecked()))
@@ -405,10 +406,10 @@ class SearchPanel(QWidget):
     def show_results(self, hits, snippets):
         self.results.clear()
         for i, ((pno, _r), text) in enumerate(zip(hits, snippets)):
-            it = QListWidgetItem(f"s.{pno + 1}  …{text}…")
+            it = QListWidgetItem(_("s.{0}  …{text}…").format(pno + 1, text=text))
             it.setData(Qt.UserRole, i)
             self.results.addItem(it)
-        self.result_label.setText(f"{len(hits)} sonuç" if hits else "Sonuç yok")
+        self.result_label.setText(_n("{0} sonuç", len(hits)).format(len(hits)) if hits else _("Sonuç yok"))
 
     def focus_query(self):
         self.query.setFocus()
@@ -430,14 +431,14 @@ class FormPanel(QWidget):
 
         bar = QHBoxLayout()
         bar.setContentsMargins(8, 6, 8, 6)
-        self.info = QLabel("Form alanı yok")
+        self.info = QLabel(_("Form alanı yok"))
         self.info.setProperty("hint", True)
         bar.addWidget(self.info, 1)
         lay.addLayout(bar)
         lay.addWidget(HLine())
 
         self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Alan", "Tür", "Değer"])
+        self.table.setHorizontalHeaderLabels([_("Alan"), _("Tür"), _("Değer")])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
@@ -468,7 +469,7 @@ class FormPanel(QWidget):
             self.table.setItem(row, 0, name)
             self.table.setItem(row, 1, kind)
             self.table.setItem(row, 2, value)
-        self.info.setText(f"{len(fields)} form alanı" if fields else "Form alanı yok")
+        self.info.setText(_n("{0} form alanı", len(fields)).format(len(fields)) if fields else _("Form alanı yok"))
         self._loading = False
 
     def _changed(self, item):
@@ -500,17 +501,17 @@ class ImagePanel(QWidget):
 
         bar = QHBoxLayout()
         bar.setContentsMargins(8, 6, 8, 6)
-        self.info = QLabel("Görüntü yok")
+        self.info = QLabel(_("Görüntü yok"))
         self.info.setProperty("hint", True)
         bar.addWidget(self.info, 1)
-        b = QPushButton("Tümünü dışa aktar")
+        b = QPushButton(_("Tümünü dışa aktar"))
         b.clicked.connect(lambda: self.commandRequested.emit("export_all", None))
         bar.addWidget(b)
         lay.addLayout(bar)
         lay.addWidget(HLine())
 
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Görüntü", "Boyut", "Sayfa"])
+        self.tree.setHeaderLabels([_("Görüntü"), _("Boyut"), _("Sayfa")])
         self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.tree.itemClicked.connect(self._clicked)
         self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -531,7 +532,7 @@ class ImagePanel(QWidget):
                 item.setData(0, Qt.UserRole, (p, img.xref, img.rect))
                 self.tree.addTopLevelItem(item)
                 total += 1
-        self.info.setText(f"{total} görüntü")
+        self.info.setText(_n("{total} görüntü", total).format(total=total))
 
     def _clicked(self, item, _col):
         data = item.data(0, Qt.UserRole)
@@ -544,10 +545,10 @@ class ImagePanel(QWidget):
             return
         data = item.data(0, Qt.UserRole)
         m = QMenu(self)
-        for label, cmd in (("Farklı kaydet…", "save"), ("Değiştir…", "replace"),
-                           ("Sil", "delete")):
+        for label, cmd in ((_("Farklı kaydet…"), "save"), (_("Değiştir…"), "replace"),
+                           (_("Sil"), "delete")):
             act = QAction(label, m)
-            act.triggered.connect(lambda _=False, c=cmd, d=data:
+            act.triggered.connect(lambda _x=False, c=cmd, d=data:
                                   self.commandRequested.emit(c, d))
             m.addAction(act)
         m.exec(self.tree.mapToGlobal(pos))

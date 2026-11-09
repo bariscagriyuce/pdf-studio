@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
+from ..i18n import N_
+
 
 class Tool(str, Enum):
     SELECT = "select"
@@ -48,46 +50,46 @@ LINE_TOOLS = {Tool.LINE, Tool.ARROW, Tool.MEASURE}
 MARKUP_TOOLS = {Tool.HIGHLIGHT, Tool.UNDERLINE, Tool.STRIKEOUT, Tool.SQUIGGLY}
 
 TOOL_LABELS = {
-    Tool.SELECT: "Seç / Düzenle",
-    Tool.PAN: "Kaydır (el)",
-    Tool.TEXT_EDIT: "Metni düzenle",
-    Tool.TEXT_ADD: "Metin ekle",
-    Tool.HIGHLIGHT: "Vurgula",
-    Tool.UNDERLINE: "Altını çiz",
-    Tool.STRIKEOUT: "Üstünü çiz",
-    Tool.SQUIGGLY: "Dalgalı çiz",
-    Tool.NOTE: "Yapışkan not",
-    Tool.FREETEXT: "Metin kutusu (açıklama)",
-    Tool.INK: "Serbest çizim",
-    Tool.ERASER: "Açıklama sil",
-    Tool.RECT: "Dikdörtgen",
-    Tool.ELLIPSE: "Elips",
-    Tool.LINE: "Çizgi",
-    Tool.ARROW: "Ok",
-    Tool.POLYGON: "Çokgen",
-    Tool.IMAGE: "Görüntü ekle",
-    Tool.SIGNATURE: "İmza yerleştir",
-    Tool.STAMP: "Damga",
-    Tool.LINK: "Bağlantı",
-    Tool.REDACT: "Karart (redaksiyon)",
-    Tool.ERASE_AREA: "Alanı sil",
-    Tool.CROP: "Kırp",
-    Tool.FORM_TEXT: "Form: metin kutusu",
-    Tool.FORM_CHECK: "Form: onay kutusu",
-    Tool.MEASURE: "Ölç",
-    Tool.PRINT_AREA: "Alanı yazdır",
+    Tool.SELECT: N_("Seç / Düzenle"),
+    Tool.PAN: N_("Kaydır (el)"),
+    Tool.TEXT_EDIT: N_("Metni düzenle"),
+    Tool.TEXT_ADD: N_("Metin ekle"),
+    Tool.HIGHLIGHT: N_("Vurgula"),
+    Tool.UNDERLINE: N_("Altını çiz"),
+    Tool.STRIKEOUT: N_("Üstünü çiz"),
+    Tool.SQUIGGLY: N_("Dalgalı çiz"),
+    Tool.NOTE: N_("Yapışkan not"),
+    Tool.FREETEXT: N_("Metin kutusu (açıklama)"),
+    Tool.INK: N_("Serbest çizim"),
+    Tool.ERASER: N_("Açıklama sil"),
+    Tool.RECT: N_("Dikdörtgen"),
+    Tool.ELLIPSE: N_("Elips"),
+    Tool.LINE: N_("Çizgi"),
+    Tool.ARROW: N_("Ok"),
+    Tool.POLYGON: N_("Çokgen"),
+    Tool.IMAGE: N_("Görüntü ekle"),
+    Tool.SIGNATURE: N_("İmza yerleştir"),
+    Tool.STAMP: N_("Damga"),
+    Tool.LINK: N_("Bağlantı"),
+    Tool.REDACT: N_("Karart (redaksiyon)"),
+    Tool.ERASE_AREA: N_("Alanı sil"),
+    Tool.CROP: N_("Kırp"),
+    Tool.FORM_TEXT: N_("Form: metin kutusu"),
+    Tool.FORM_CHECK: N_("Form: onay kutusu"),
+    Tool.MEASURE: N_("Ölç"),
+    Tool.PRINT_AREA: N_("Alanı yazdır"),
 }
 
 TOOL_HINTS = {
-    Tool.SELECT: "Metin seçmek için sürükleyin; açıklamaya tıklayıp taşıyın/boyutlandırın.",
-    Tool.TEXT_EDIT: "Bir metin bloğuna tıklayın; içeriği, punto ve rengi düzenleyin.",
-    Tool.TEXT_ADD: "Sayfada bir kutu çizin ve yeni metni yazın (sayfa içeriğine işlenir).",
-    Tool.HIGHLIGHT: "Vurgulamak istediğiniz metnin üzerinde sürükleyin.",
-    Tool.INK: "Fare ile serbestçe çizin; bırakınca açıklama olarak eklenir.",
-    Tool.REDACT: "Alanları işaretleyin, sonra 'Karartmaları uygula' deyin — içerik kalıcı silinir.",
-    Tool.CROP: "Yeni sayfa sınırını çizin.",
-    Tool.ERASE_AREA: "Silinecek alanı çizin; o alandaki metin/grafik kalıcı kaldırılır.",
-    Tool.PRINT_AREA: "Yazdırmak istediğiniz alanı çizin; yalnızca o bölge basılır.",
+    Tool.SELECT: N_("Metin seçmek için sürükleyin; açıklamaya tıklayıp taşıyın/boyutlandırın."),
+    Tool.TEXT_EDIT: N_("Bir metin bloğuna tıklayın; içeriği, punto ve rengi düzenleyin."),
+    Tool.TEXT_ADD: N_("Sayfada bir kutu çizin ve yeni metni yazın (sayfa içeriğine işlenir)."),
+    Tool.HIGHLIGHT: N_("Vurgulamak istediğiniz metnin üzerinde sürükleyin."),
+    Tool.INK: N_("Fare ile serbestçe çizin; bırakınca açıklama olarak eklenir."),
+    Tool.REDACT: N_("Alanları işaretleyin, sonra 'Karartmaları uygula' deyin — içerik kalıcı silinir."),
+    Tool.CROP: N_("Yeni sayfa sınırını çizin."),
+    Tool.ERASE_AREA: N_("Silinecek alanı çizin; o alandaki metin/grafik kalıcı kaldırılır."),
+    Tool.PRINT_AREA: N_("Yazdırmak istediğiniz alanı çizin; yalnızca o bölge basılır."),
 }
 
 

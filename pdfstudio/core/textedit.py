@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 import pymupdf
 
+from ..i18n import N_, _
 from .fonts import normalize_pdf_fontname, resolve_insert_font
 
 ALIGN = {"sol": 0, "orta": 1, "sağ": 2, "iki yana": 3}
@@ -186,7 +187,7 @@ def _insert_fitted(page: pymupdf.Page, rect: pymupdf.Rect, text: str, style: Tex
     fontname, fontfile = resolve_insert_font(style.family, style.bold, style.italic, text)
     size = float(style.size)
     box = pymupdf.Rect(rect)
-    for _ in range(48):
+    for _x in range(48):
         rc = page.insert_textbox(
             box, text, fontname=fontname, fontfile=fontfile, fontsize=size,
             color=tuple(style.color), align=style.align,
@@ -238,7 +239,7 @@ def erase_region(page: pymupdf.Page, rect: pymupdf.Rect, *, fill=None,
 def replace_region_text(document, pno: int, rect: pymupdf.Rect, new_text: str,
                         style: TextStyle, *, background=None, grow: bool = True,
                         expand_width: bool = True, right_margin: float = 32.0,
-                        label: str = "Metni düzenle") -> bool:
+                        label: str = N_("Metni düzenle")) -> bool:
     """Bir alandaki metni siler ve yerine yeni metni aynı stille yazar.
 
     grow=True ise kutu, metin sığmadığında aşağı doğru büyür; expand_width=True
@@ -267,7 +268,7 @@ def replace_region_text(document, pno: int, rect: pymupdf.Rect, new_text: str,
 
 
 def insert_text_box(document, pno: int, rect: pymupdf.Rect, text: str,
-                    style: TextStyle, *, label: str = "Metin ekle") -> bool:
+                    style: TextStyle, *, label: str = N_("Metin ekle")) -> bool:
     with document.edit(label, pages=[pno]) as doc:
         page = doc[pno]
         box = pymupdf.Rect(rect)
@@ -281,7 +282,7 @@ def insert_text_box(document, pno: int, rect: pymupdf.Rect, text: str,
 
 def delete_text_region(document, pno: int, rect: pymupdf.Rect, *, background=None,
                        remove_images: bool = False, remove_graphics: bool = False,
-                       label: str = "Alanı sil") -> None:
+                       label: str = N_("Alanı sil")) -> None:
     with document.edit(label, pages=[pno]) as doc:
         erase_region(doc[pno], pymupdf.Rect(rect), fill=background,
                      remove_images=remove_images, remove_graphics=remove_graphics)
@@ -293,7 +294,7 @@ def redact_areas(document, areas: list[tuple[int, pymupdf.Rect]], *, fill=(0, 0,
     by_page: dict[int, list[pymupdf.Rect]] = {}
     for pno, r in areas:
         by_page.setdefault(pno, []).append(pymupdf.Rect(r))
-    with document.edit("Karart (redaksiyon)", structural=True) as doc:
+    with document.edit(_("Karart (redaksiyon)"), structural=True) as doc:
         for pno, rects in by_page.items():
             page = doc[pno]
             for r in rects:
@@ -338,7 +339,7 @@ def replace_all(document, needle: str, replacement: str, *, style: TextStyle | N
         return 0
     rng = list(pages if pages is not None else range(document.page_count))
     count = 0
-    with document.edit(f"'{needle}' değiştir", structural=True) as doc:
+    with document.edit(_("'{needle}' değiştir").format(needle=needle), structural=True) as doc:
         for pno in rng:
             page = doc[pno]
             rects = page.search_for(needle)
@@ -361,7 +362,7 @@ def replace_all(document, needle: str, replacement: str, *, style: TextStyle | N
                             break
                     styles.append(st or (style.copy() if style else TextStyle()))
             else:
-                styles = [(style.copy() if style else TextStyle()) for _ in rects]
+                styles = [(style.copy() if style else TextStyle()) for _x in rects]
 
             for r in rects:
                 page.add_redact_annot(r, fill=None, cross_out=False)

@@ -2,8 +2,12 @@
 Type=Application
 Name=YUCE PDF EDITOR
 Name[tr]=YUCE PDF Düzenleyici
-GenericName=PDF Düzenleyici
-Comment=PDF dosyalarını görüntüleyin ve ayrıntılı olarak düzenleyin
+GenericName=PDF Editor
+GenericName[tr]=PDF Düzenleyici
+GenericName[pt_BR]=Editor de PDF
+Comment=View and edit PDF documents in detail
+Comment[tr]=PDF dosyalarını görüntüleyin ve ayrıntılı olarak düzenleyin
+Comment[pt_BR]=Visualize e edite documentos PDF em detalhes
 Exec=/opt/pdf-studio/run.sh %f
 Icon=pdf-studio
 Terminal=false

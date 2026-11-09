@@ -169,6 +169,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "PySide6-Essentials>=6.7" "PyMuPDF>=1.24" pyinstaller
 
+      - name: Çevirileri denetle (eksik çeviri / yer tutucu uyumsuzluğu)
+        run: python packaging/check_translations.py
+
       - name: Sürümü dosyalara işle
         run: python packaging/set_version.py "$APP_VERSION"
 

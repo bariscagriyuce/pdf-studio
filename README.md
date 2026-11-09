@@ -9,7 +9,7 @@ yönetir, form doldurur, karartma (redaksiyon) uygular ve belgeyi şifreler.
 | | |
 |---|---|
 | **Motor** | PyMuPDF (MuPDF) — hızlı, yerel, ağ bağlantısı gerektirmez |
-| **Arayüz** | PySide6 (Qt 6) — koyu/açık tema, tamamen Türkçe |
+| **Arayüz** | PySide6 (Qt 6) — koyu/açık tema; Türkçe, İngilizce, Brezilya Portekizcesi |
 | **Platform** | Linux, Windows (macOS'ta da çalışır) |
 
 ---
@@ -216,6 +216,38 @@ koyu ve açık tema, baskı önizleme ve yazdırma, PDF sürükleyip bırakma.
 
 ---
 
+## Diller
+
+Arayüz **Türkçe**, **İngilizce** ve **Brezilya Portekizcesi** destekler.
+*Görünüm → Dil* menüsünden seçilir; değişiklik yeniden başlatınca uygulanır
+(uygulama açık belgeyle birlikte kendini yeniden başlatmayı önerir).
+Varsayılan **Sistem dili**dir: Türkçe sistemde Türkçe, Portekizce sistemde
+Portekizce, diğerlerinde İngilizce açılır. Qt'nin kendi pencereleri (Evet/Hayır,
+dosya ve renk seçici, baskı önizleme) ile sayı biçimi de seçilen dili izler.
+
+Uygulama adı Türkçe arayüzde *YUCE PDF Düzenleyici*, diğer dillerde
+*YUCE PDF EDITOR* olarak görünür. Komut satırından dil zorlamak için:
+
+```bash
+PDFSTUDIO_LANG=en pdf-studio
+```
+
+### Çeviri eklemek / düzeltmek
+
+Kaynak dil Türkçedir: koddaki `_("…")` metinleri aynı zamanda çeviri
+anahtarıdır. Çeviriler `pdfstudio/locales/<dil>.py` içindeki `MESSAGES`
+sözlüğündedir. Bir değişiklikten sonra:
+
+```bash
+python packaging/check_translations.py
+```
+
+eksik çevirileri ve yer tutucu uyumsuzluklarını (`{0}`, `{name}`, `{0:.0f}`)
+raporlar — uyumsuz bir yer tutucu, o mesaj gösterildiğinde uygulamayı
+çökertir. CI her derlemede bu denetimi çalıştırır. Yeni bir dil için
+`pdfstudio/i18n.py` içindeki `LANGUAGES` sözlüğüne ekleyip aynı yapıda bir
+katalog dosyası oluşturmak yeterlidir.
+
 ## Klavye kısayolları
 
 | Kısayol | İşlev |
@@ -245,6 +277,9 @@ koyu ve açık tema, baskı önizleme ve yazdırma, PDF sürükleyip bırakma.
 ```
 pdfstudio/
 ├── app.py                 Uygulama başlangıcı
+├── i18n.py                Çeviri altyapısı (_ / _n / N_, dil seçimi, Qt çevirileri)
+├── locales/               Çeviri katalogları (en.py, pt_BR.py)
+├── branding.py            Uygulama adı ve teknik kimlikler
 ├── core/                  PDF motoru (arayüzden bağımsız)
 │   ├── document.py        Belge modeli, anlık görüntü tabanlı undo/redo
 │   ├── textedit.py        Metin bloğu tespiti, yerinde değiştirme, ara-değiştir

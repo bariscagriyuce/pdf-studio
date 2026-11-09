@@ -61,6 +61,7 @@ RestartApplications=no
 [Languages]
 Name: "turkish";  MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [CustomMessages]
 turkish.AppTitle={#AppNameTr}
@@ -79,6 +80,14 @@ english.LaunchApp=Launch {#AppNameEn}
 english.AdditionalIcons=Additional shortcuts:
 english.FileAssoc=File association:
 english.PdfDocument=PDF Document
+brazilianportuguese.AppTitle={#AppNameEn}
+brazilianportuguese.CreateDesktopIcon=Criar um atalho na área de trabalho
+brazilianportuguese.AssociatePdf=Adicionar à lista "Abrir com" dos arquivos PDF
+brazilianportuguese.SetDefaultPdf=Tornar o aplicativo padrão para arquivos PDF
+brazilianportuguese.LaunchApp=Iniciar o {#AppNameEn}
+brazilianportuguese.AdditionalIcons=Atalhos adicionais:
+brazilianportuguese.FileAssoc=Associação de arquivos:
+brazilianportuguese.PdfDocument=Documento PDF
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
