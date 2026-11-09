@@ -1,5 +1,7 @@
 # YUCE PDF Düzenleyici
 
+**Türkçe** · [English](README.en.md) · [Português (Brasil)](README.pt-BR.md)
+
 *YUCE PDF EDITOR*
 
 Windows ve Linux üzerinde çalışan, **Adobe Acrobat Pro benzeri** masaüstü PDF
@@ -18,48 +20,47 @@ yönetir, form doldurur, karartma (redaksiyon) uygular ve belgeyi şifreler.
 
 ### Hazır kurulum dosyaları
 
-| Platform | Dosya | Kurulum komutu |
-|---|---|---|
-| **Arch / CachyOS / Manjaro** | `pdf-studio-1.1.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U pdf-studio-1.1.0-1-x86_64.pkg.tar.zst` |
-| **Diğer Linux** (glibc 2.35+) | `YUCE-PDF-Editor-1.1.0-x86_64.run` | `bash YUCE-PDF-Editor-1.1.0-x86_64.run` |
-| **Windows** 10/11 | `YUCE-PDF-Editor-1.1.0-Setup.exe` | Çift tıklayın, sihirbazı izleyin |
-| **Windows** (kurulumsuz) | `YUCE-PDF-Editor-1.1.0-portable.exe` | Çift tıklayın, doğrudan çalışır |
+Güncel dosyalar **[Releases → en son sürüm](https://github.com/bariscagriyuce/pdf-studio/releases/latest)** sayfasındadır.
+Aşağıda `<sürüm>` yerine indirdiğiniz sürümü (ör. `1.2.0`) yazın.
 
-Python kurulu olması gerekmez; her şey pakete gömülüdür.
+| Platform | Dosya | Kurulum |
+|---|---|---|
+| **Windows** 10/11 | `YUCE-PDF-Editor-<sürüm>-Setup.exe` | Çift tıklayın, sihirbazı izleyin |
+| **Windows** (kurulumsuz) | `YUCE-PDF-Editor-<sürüm>-portable.exe` | Çift tıklayın, doğrudan çalışır |
+| **Linux** (glibc 2.35+) | `YUCE-PDF-Editor-<sürüm>-x86_64.run` | `bash YUCE-PDF-Editor-<sürüm>-x86_64.run` |
+
+Python kurulu olması gerekmez; her şey pakete gömülüdür. Her dosya,
+yayımlanmadan önce gömülü sınamadan geçirilir; bütünlüğü sürüm sayfasındaki
+`SHA256SUMS.txt` ile doğrulayabilirsiniz.
 
 > **Ad değişikliği (1.1.0):** Uygulamanın adı *PDF Studio* iken *YUCE PDF
 > Düzenleyici* oldu. Teknik kimlikler bilerek aynı bırakıldı — komut hâlâ
 > `pdf-studio`, paket adı `pdf-studio`, çalıştırılabilir `PDFStudio.exe`.
-> Böylece 1.0.0'ın üzerine doğrudan güncellenir ve ayarlarınız korunur.
+> Böylece eski sürümlerin üzerine doğrudan güncellenir ve ayarlarınız korunur.
 
-#### Arch tabanlı dağıtımlar (önerilen yol)
+#### Windows
 
-```bash
-sudo pacman -U pdf-studio-1.1.0-1-x86_64.pkg.tar.zst
-```
+`Setup.exe` Türkçe, İngilizce ve Brezilya Portekizcesi kurulum sihirbazı açar;
+yönetici hakkı istemeden yalnızca sizin için ya da tüm kullanıcılar için kurabilir.
+Başlat menüsü kısayolu, isteğe bağlı masaüstü kısayolu ve PDF dosyaları için
+"Birlikte aç" kaydı ekler; Denetim Masası'ndan temiz kaldırılır.
 
-`/opt/pdf-studio` altına kurulur; uygulama menüsüne, `pdf-studio` komutuna ve
-PDF "Birlikte aç" listesine eklenir. Kaldırmak için:
-
-```bash
-sudo pacman -R pdf-studio
-```
-
-#### Diğer dağıtımlar — `.run` kurulumu
+#### Linux — `.run` kurulumu
 
 ```bash
-bash YUCE-PDF-Editor-1.1.0-x86_64.run
+bash YUCE-PDF-Editor-<sürüm>-x86_64.run
 ```
 
 Root değilseniz `~/.local/opt/pdf-studio` altına, `sudo` ile çalıştırırsanız
-`/opt/pdf-studio` altına kurar. Seçenekler:
+`/opt/pdf-studio` altına kurar; uygulama menüsüne kısayol ve `pdf-studio`
+komutunu ekler. Seçenekler:
 
 ```bash
-bash YUCE-PDF-Editor-1.1.0-x86_64.run --help       # tüm seçenekler
-bash YUCE-PDF-Editor-1.1.0-x86_64.run --verify     # kurup gömülü sınamayı çalıştır
-bash YUCE-PDF-Editor-1.1.0-x86_64.run --system     # sudo ile sistem geneline
-bash YUCE-PDF-Editor-1.1.0-x86_64.run --extract .  # kurmadan sadece çıkar
-bash YUCE-PDF-Editor-1.1.0-x86_64.run --uninstall  # kaldır
+bash YUCE-PDF-Editor-<sürüm>-x86_64.run --help       # tüm seçenekler
+bash YUCE-PDF-Editor-<sürüm>-x86_64.run --verify     # kurup gömülü sınamayı çalıştır
+bash YUCE-PDF-Editor-<sürüm>-x86_64.run --system     # sudo ile sistem geneline
+bash YUCE-PDF-Editor-<sürüm>-x86_64.run --extract .  # kurmadan sadece çıkar
+bash YUCE-PDF-Editor-<sürüm>-x86_64.run --uninstall  # kaldır
 ```
 
 > **Çift tıklamak neden çalışmıyor?** İki yaygın sebep var:
@@ -75,6 +76,20 @@ bash YUCE-PDF-Editor-1.1.0-x86_64.run --uninstall  # kaldır
 > Her hâlükârda terminalden `bash YUCE-PDF-Editor-*.run` demek her zaman çalışır —
 > `.run` kurulumları (NVIDIA sürücüsü, Anaconda vb.) geleneksel olarak böyle
 > kullanılır.
+
+#### Arch / CachyOS / Manjaro — yerel paket
+
+Sürüm sayfasında hazır bir Arch paketi **yoktur**; `.run` kurulumu Arch
+tabanlı dağıtımlarda da çalışır. pacman ile yönetilen bir kurulum isterseniz
+paketi kaynaktan kendiniz üretebilirsiniz (aşağıdaki
+[Kendi kurulum dosyanızı üretmek](#kendi-kurulum-dosyanızı-üretmek) bölümü):
+
+```bash
+bash packaging/arch/build-arch-package.sh dist/PDFStudio <sürüm>
+sudo pacman -U pdf-studio-<sürüm>-1-x86_64.pkg.tar.zst
+```
+
+`/opt/pdf-studio` altına kurulur; kaldırmak için `sudo pacman -R pdf-studio`.
 
 #### Kurulumu doğrulamak
 
@@ -104,10 +119,10 @@ Ayrıntılar için [`packaging/README.md`](packaging/README.md). Kısaca:
 python3 -m PyInstaller --noconfirm --clean packaging/pdfstudio.spec
 
 # Evrensel .run kurulumu
-bash packaging/make_linux_installer.sh dist/PDFStudio YUCE-PDF-Editor-1.1.0-x86_64.run 1.1.0
+bash packaging/make_linux_installer.sh dist/PDFStudio YUCE-PDF-Editor-<sürüm>-x86_64.run <sürüm>
 
 # Arch/CachyOS paketi (makepkg gerekir)
-bash packaging/arch/build-arch-package.sh dist/PDFStudio 1.1.0
+bash packaging/arch/build-arch-package.sh dist/PDFStudio <sürüm>
 ```
 
 Windows dosyalarını Linux'tan üretmek mümkün değildir. `.github/workflows/build.yml`
@@ -279,6 +294,7 @@ pdfstudio/
 ├── app.py                 Uygulama başlangıcı
 ├── i18n.py                Çeviri altyapısı (_ / _n / N_, dil seçimi, Qt çevirileri)
 ├── locales/               Çeviri katalogları (en.py, pt_BR.py)
+├── selftest.py            Gömülü sınama (--self-test)
 ├── branding.py            Uygulama adı ve teknik kimlikler
 ├── core/                  PDF motoru (arayüzden bağımsız)
 │   ├── document.py        Belge modeli, anlık görüntü tabanlı undo/redo
@@ -308,7 +324,9 @@ packaging/                 Kurulum dosyası üretimi
 ├── installer_header.sh    Linux .run dosyasının açılış betiği
 ├── make_linux_installer.sh
 ├── arch/                  Arch/CachyOS paketi (PKGBUILD + üretim betiği)
-└── version_info.txt       Windows exe sürüm bilgisi
+├── check_translations.py Çeviri denetleyicisi (CI'da çalışır)
+├── set_version.py         Sürüm numarasını her yere işler
+└── version_info.txt       Windows exe sürüm bilgisi (üretilir)
 
 .github/workflows/build.yml  Otomatik derleme (Windows + Linux)
 ```
