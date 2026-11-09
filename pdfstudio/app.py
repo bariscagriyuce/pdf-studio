@@ -23,7 +23,7 @@ def app_icon() -> QIcon:
     return ic
 
 
-USAGE = """PDF Studio — ayrıntılı PDF düzenleyici
+USAGE = """YUCE PDF Düzenleyici (YUCE PDF EDITOR) — ayrıntılı PDF düzenleyici
 
 Kullanım:
   PDFStudio [dosya.pdf]      Belgeyi açar (dosya verilmezse boş başlar)
@@ -43,7 +43,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if "--version" in argv:
         from . import __version__
-        print(f"PDF Studio {__version__}")
+        from .branding import app_name
+        print(f"{app_name()} {__version__}")
         return 0
     if "--self-test" in argv:
         from .selftest import run
@@ -61,10 +62,16 @@ def main(argv: list[str] | None = None) -> int:
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
+    from .branding import APP_ID, EXE_NAME, SETTINGS_ORG
+
     app = QApplication(argv)
-    app.setApplicationName(APP_NAME)
+    # Teknik ad sabit kalır: X11'de WM_CLASS olur ve .desktop dosyasındaki
+    # StartupWMClass ile eşleşmesi gerekir (görev çubuğu ikonu/gruplama).
+    app.setApplicationName(EXE_NAME)
     app.setApplicationDisplayName(APP_NAME)
-    app.setOrganizationName("PDFStudio")
+    app.setOrganizationName(SETTINGS_ORG)
+    # Wayland'de pencereyi .desktop girdisine (ad + ikon) bağlar
+    app.setDesktopFileName(APP_ID)
     app.setWindowIcon(app_icon())
 
     # Yazı tipi taraması ilk açılışta uzun sürebilir; arka planda hazırlanır.

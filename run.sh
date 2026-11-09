@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PDF Studio — Linux/macOS başlatıcı.
+# YUCE PDF Düzenleyici — Linux/macOS başlatıcı.
 # İlk çalıştırmada sanal ortamı kurar, sonrakilerde doğrudan açar.
 set -e
 cd "$(dirname "$0")"

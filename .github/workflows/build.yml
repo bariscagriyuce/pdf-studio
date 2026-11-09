@@ -1,6 +1,6 @@
 name: Kurulum dosyalarını derle
 
-# Windows kurulum sihirbazı + taşınabilir exe ve Linux .run kurulumu üretir.
+# YUCE PDF Düzenleyici: Windows kurulum sihirbazı + taşınabilir exe ve Linux .run kurulumu üretir.
 # Elle çalıştırmak için: Actions sekmesi → "Kurulum dosyalarını derle" → Run workflow
 # Sürüm yayımlamak için:  git tag v1.2.3 && git push --tags
 #   → sürüm numarası etiketten okunur, tüm dosya adlarına ve exe özelliklerine işlenir
@@ -106,15 +106,15 @@ jobs:
           PDFSTUDIO_ONEFILE: '1'
         run: |
           pyinstaller --noconfirm --clean --distpath dist-onefile packaging/pdfstudio.spec
-          Rename-Item dist-onefile\PDFStudio.exe "PDFStudio-$env:APP_VERSION-portable.exe"
-          $exe = Get-ChildItem "dist-onefile\PDFStudio-$env:APP_VERSION-portable.exe"
+          Rename-Item dist-onefile\PDFStudio.exe "YUCE-PDF-Editor-$env:APP_VERSION-portable.exe"
+          $exe = Get-ChildItem "dist-onefile\YUCE-PDF-Editor-$env:APP_VERSION-portable.exe"
           Write-Host "Tasinabilir: $($exe.Name)  ($([math]::Round($exe.Length/1MB,1)) MB)"
 
       - name: Kendi kendini sınama (taşınabilir)
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
-          $exe = "dist-onefile\PDFStudio-$env:APP_VERSION-portable.exe"
+          $exe = "dist-onefile\YUCE-PDF-Editor-$env:APP_VERSION-portable.exe"
           $p = Start-Process -FilePath $exe `
                -ArgumentList "--self-test","--log","selftest-portable.log" -Wait -PassThru
           if (Test-Path selftest-portable.log) { Get-Content selftest-portable.log }
@@ -184,16 +184,16 @@ jobs:
         run: |
           bash packaging/make_linux_installer.sh \
             dist/PDFStudio \
-            "dist/PDFStudio-${APP_VERSION}-x86_64.run" \
+            "dist/YUCE-PDF-Editor-${APP_VERSION}-x86_64.run" \
             "${APP_VERSION}"
           ls -lh dist/*.run
 
       - name: Kurulumu sına (kur → çalıştır → kaldır)
         run: |
           export HOME="$(mktemp -d)"
-          bash "dist/PDFStudio-${APP_VERSION}-x86_64.run" --user < /dev/null
+          bash "dist/YUCE-PDF-Editor-${APP_VERSION}-x86_64.run" --user < /dev/null
           QT_QPA_PLATFORM=offscreen "$HOME/.local/bin/pdf-studio" --self-test
-          bash "dist/PDFStudio-${APP_VERSION}-x86_64.run" --uninstall
+          bash "dist/YUCE-PDF-Editor-${APP_VERSION}-x86_64.run" --uninstall
           test ! -d "$HOME/.local/opt/pdf-studio" && echo "Kaldırma temiz ✔"
 
       - name: Çıktıyı yükle
@@ -231,14 +231,16 @@ jobs:
         with:
           files: yayin/*
           generate_release_notes: true
+          name: YUCE PDF Düzenleyici ${{ github.ref_name }}
           body: |
-            ## PDF Studio ${{ github.ref_name }}
+            ## YUCE PDF Düzenleyici ${{ github.ref_name }}
+            *YUCE PDF EDITOR*
 
             | Dosya | Platform | Açıklama |
             |---|---|---|
-            | `PDFStudio-${{ needs.version.outputs.version }}-Setup.exe` | Windows 10/11 | Kurulum sihirbazı — Başlat menüsü, masaüstü kısayolu, PDF ilişkilendirmesi, Denetim Masası'ndan kaldırma |
-            | `PDFStudio-${{ needs.version.outputs.version }}-portable.exe` | Windows 10/11 | Taşınabilir tek dosya — kurulum yok, çift tıkla çalışır |
-            | `PDFStudio-${{ needs.version.outputs.version }}-x86_64.run` | Linux (glibc 2.35+) | `bash PDFStudio-*.run` ile kurun, `--uninstall` ile kaldırın |
+            | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-Setup.exe` | Windows 10/11 | Kurulum sihirbazı — Başlat menüsü, masaüstü kısayolu, PDF ilişkilendirmesi, Denetim Masası'ndan kaldırma |
+            | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-portable.exe` | Windows 10/11 | Taşınabilir tek dosya — kurulum yok, çift tıkla çalışır |
+            | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-x86_64.run` | Linux (glibc 2.35+) | `bash YUCE-PDF-Editor-*.run` ile kurun, `--uninstall` ile kaldırın |
 
             `SHA256SUMS.txt` ile dosya bütünlüğünü doğrulayabilirsiniz.
 

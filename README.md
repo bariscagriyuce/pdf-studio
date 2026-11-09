@@ -1,4 +1,6 @@
-# PDF Studio
+# YUCE PDF Düzenleyici
+
+*YUCE PDF EDITOR*
 
 Windows ve Linux üzerinde çalışan, **Adobe Acrobat Pro benzeri** masaüstü PDF
 düzenleyici. Sayfa içeriğindeki gerçek metni düzenler, açıklama ekler, sayfaları
@@ -18,17 +20,22 @@ yönetir, form doldurur, karartma (redaksiyon) uygular ve belgeyi şifreler.
 
 | Platform | Dosya | Kurulum komutu |
 |---|---|---|
-| **Arch / CachyOS / Manjaro** | `pdf-studio-1.0.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U pdf-studio-1.0.0-1-x86_64.pkg.tar.zst` |
-| **Diğer Linux** (glibc 2.35+) | `PDFStudio-1.0.0-x86_64.run` | `bash PDFStudio-1.0.0-x86_64.run` |
-| **Windows** 10/11 | `PDFStudio-1.0.0-Setup.exe` | Çift tıklayın, sihirbazı izleyin |
-| **Windows** (kurulumsuz) | `PDFStudio-1.0.0-portable.exe` | Çift tıklayın, doğrudan çalışır |
+| **Arch / CachyOS / Manjaro** | `pdf-studio-1.1.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U pdf-studio-1.1.0-1-x86_64.pkg.tar.zst` |
+| **Diğer Linux** (glibc 2.35+) | `YUCE-PDF-Editor-1.1.0-x86_64.run` | `bash YUCE-PDF-Editor-1.1.0-x86_64.run` |
+| **Windows** 10/11 | `YUCE-PDF-Editor-1.1.0-Setup.exe` | Çift tıklayın, sihirbazı izleyin |
+| **Windows** (kurulumsuz) | `YUCE-PDF-Editor-1.1.0-portable.exe` | Çift tıklayın, doğrudan çalışır |
 
 Python kurulu olması gerekmez; her şey pakete gömülüdür.
+
+> **Ad değişikliği (1.1.0):** Uygulamanın adı *PDF Studio* iken *YUCE PDF
+> Düzenleyici* oldu. Teknik kimlikler bilerek aynı bırakıldı — komut hâlâ
+> `pdf-studio`, paket adı `pdf-studio`, çalıştırılabilir `PDFStudio.exe`.
+> Böylece 1.0.0'ın üzerine doğrudan güncellenir ve ayarlarınız korunur.
 
 #### Arch tabanlı dağıtımlar (önerilen yol)
 
 ```bash
-sudo pacman -U pdf-studio-1.0.0-1-x86_64.pkg.tar.zst
+sudo pacman -U pdf-studio-1.1.0-1-x86_64.pkg.tar.zst
 ```
 
 `/opt/pdf-studio` altına kurulur; uygulama menüsüne, `pdf-studio` komutuna ve
@@ -41,31 +48,31 @@ sudo pacman -R pdf-studio
 #### Diğer dağıtımlar — `.run` kurulumu
 
 ```bash
-bash PDFStudio-1.0.0-x86_64.run
+bash YUCE-PDF-Editor-1.1.0-x86_64.run
 ```
 
 Root değilseniz `~/.local/opt/pdf-studio` altına, `sudo` ile çalıştırırsanız
 `/opt/pdf-studio` altına kurar. Seçenekler:
 
 ```bash
-bash PDFStudio-1.0.0-x86_64.run --help       # tüm seçenekler
-bash PDFStudio-1.0.0-x86_64.run --verify     # kurup gömülü sınamayı çalıştır
-bash PDFStudio-1.0.0-x86_64.run --system     # sudo ile sistem geneline
-bash PDFStudio-1.0.0-x86_64.run --extract .  # kurmadan sadece çıkar
-bash PDFStudio-1.0.0-x86_64.run --uninstall  # kaldır
+bash YUCE-PDF-Editor-1.1.0-x86_64.run --help       # tüm seçenekler
+bash YUCE-PDF-Editor-1.1.0-x86_64.run --verify     # kurup gömülü sınamayı çalıştır
+bash YUCE-PDF-Editor-1.1.0-x86_64.run --system     # sudo ile sistem geneline
+bash YUCE-PDF-Editor-1.1.0-x86_64.run --extract .  # kurmadan sadece çıkar
+bash YUCE-PDF-Editor-1.1.0-x86_64.run --uninstall  # kaldır
 ```
 
 > **Çift tıklamak neden çalışmıyor?** İki yaygın sebep var:
 >
 > 1. **Dosya NTFS/FAT bir diskte.** Bu dosya sistemleri çalıştırma iznini
 >    tutamaz; `chmod +x` sessizce etkisiz kalır. Dosyayı ev dizininize
->    kopyalayın: `cp PDFStudio-*.run ~/ && chmod +x ~/PDFStudio-*.run`
+>    kopyalayın: `cp YUCE-PDF-Editor-*.run ~/ && chmod +x ~/YUCE-PDF-Editor-*.run`
 > 2. **Masaüstünüz kabuk betiklerini çalıştırmıyor.** KDE/Dolphin ve GNOME/Nautilus
 >    varsayılan olarak `.run` gibi dosyaları metin düzenleyicide açar.
 >    KDE'de: *Dolphin → Ayarlar → Dolphin'i Yapılandır → Genel → Onaylamalar →
 >    "Çalıştırılabilir betikleri açarken"* ayarını **"Çalıştır"** yapın.
 >
-> Her hâlükârda terminalden `bash PDFStudio-*.run` demek her zaman çalışır —
+> Her hâlükârda terminalden `bash YUCE-PDF-Editor-*.run` demek her zaman çalışır —
 > `.run` kurulumları (NVIDIA sürücüsü, Anaconda vb.) geleneksel olarak böyle
 > kullanılır.
 
@@ -97,10 +104,10 @@ Ayrıntılar için [`packaging/README.md`](packaging/README.md). Kısaca:
 python3 -m PyInstaller --noconfirm --clean packaging/pdfstudio.spec
 
 # Evrensel .run kurulumu
-bash packaging/make_linux_installer.sh dist/PDFStudio PDFStudio-1.0.0-x86_64.run 1.0.0
+bash packaging/make_linux_installer.sh dist/PDFStudio YUCE-PDF-Editor-1.1.0-x86_64.run 1.1.0
 
 # Arch/CachyOS paketi (makepkg gerekir)
-bash packaging/arch/build-arch-package.sh dist/PDFStudio 1.0.0
+bash packaging/arch/build-arch-package.sh dist/PDFStudio 1.1.0
 ```
 
 Windows dosyalarını Linux'tan üretmek mümkün değildir. `.github/workflows/build.yml`
@@ -119,7 +126,7 @@ Her yapı, yüklenmeden önce gömülü sınamadan geçirilir.
 Tek kaynak `pdfstudio/__init__.py` içindeki `__version__`. Etiketli bir derlemede
 sürüm **etiketten** okunur ve `packaging/set_version.py` ile her yere işlenir:
 dosya adları, Windows exe özellikleri, kurulum sihirbazı ve uygulamanın "Hakkında"
-penceresi. Yani `v1.2.3` etiketi `PDFStudio-1.2.3-Setup.exe` üretir; elle sürüm
+penceresi. Yani `v1.2.3` etiketi `YUCE-PDF-Editor-1.2.3-Setup.exe` üretir; elle sürüm
 güncellemek gerekmez.
 
 Yerelde sürüm değiştirmek için:

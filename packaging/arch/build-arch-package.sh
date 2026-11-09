@@ -26,7 +26,8 @@ cat > "$WORK/pdf-studio.desktop" <<'DESKTOP'
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=PDF Studio
+Name=YUCE PDF EDITOR
+Name[tr]=YUCE PDF Düzenleyici
 GenericName=PDF Düzenleyici
 GenericName[en]=PDF Editor
 Comment=PDF dosyalarını görüntüleyin ve ayrıntılı olarak düzenleyin

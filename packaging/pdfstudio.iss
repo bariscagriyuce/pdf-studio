@@ -1,42 +1,50 @@
-; ===========================================================================
-;  PDF Studio - Windows kurulum sihirbazi (Inno Setup 6)
+﻿; ===========================================================================
+;  YUCE PDF Düzenleyici / YUCE PDF EDITOR - Windows kurulum sihirbazı (Inno Setup 6)
 ;  Derleme:  iscc packaging\pdfstudio.iss
-;  Girdi  :  dist\PDFStudio\   (PyInstaller onedir ciktisi)
-;  Cikti  :  dist\installer\PDFStudio-<surum>-Setup.exe
+;  Girdi  :  dist\PDFStudio\   (PyInstaller onedir çıktısı)
+;  Çıktı  :  dist\installer\YUCE-PDF-Editor-<sürüm>-Setup.exe
+;  Not    :  Dosya UTF-8 (BOM'lu) kaydedilmelidir; Türkçe karakterler içerir.
 ; ===========================================================================
 
-#define AppName        "PDF Studio"
-; Version can also be passed on the command line:
+#define AppNameEn      "YUCE PDF EDITOR"
+#define AppNameTr      "YUCE PDF Düzenleyici"
+; Sürüm komut satırından verilebilir:  iscc /DAppVersion=1.2.3 pdfstudio.iss
 #ifndef AppVersion
   #define AppVersion   "1.0.0"
 #endif
-; VersionInfoVersion yalnizca sayisal olabilir (1.2.3 gibi); on-surum
-; etiketli surumlerde (1.2.3-beta) ayri bir deger gerekir.
+; VersionInfoVersion yalnızca sayısal olabilir (1.2.3 gibi)
 #ifndef AppVersionNumeric
   #define AppVersionNumeric AppVersion
 #endif
-#define AppPublisher   "PDF Studio"
+#define AppPublisher   "YUCE"
+; Teknik kimlikler önceki sürümle aynı: AppId ve exe adı değişirse güncelleme
+; yerine ikinci bir kopya kurulur.
 #define AppExeName     "PDFStudio.exe"
 #define AppId          "{{9F3A6C41-7B2E-4D58-9A16-3C7E5D8B1042}"
+#define AppDirName     "YUCE PDF Editor"
 #define SourceDir      "..\dist\PDFStudio"
 
 [Setup]
 AppId={#AppId}
-AppName={#AppName}
+AppName={cm:AppTitle}
 AppVersion={#AppVersion}
-AppVerName={#AppName} {#AppVersion}
+AppVerName={cm:AppTitle} {#AppVersion}
 AppPublisher={#AppPublisher}
 VersionInfoVersion={#AppVersionNumeric}
-DefaultDirName={autopf}\{#AppName}
-DefaultGroupName={#AppName}
+VersionInfoProductName={#AppNameEn}
+VersionInfoDescription={#AppNameEn} Setup
+VersionInfoCompany={#AppPublisher}
+DefaultDirName={autopf}\{#AppDirName}
+DefaultGroupName={#AppNameEn}
+UsePreviousGroup=no
 DisableProgramGroupPage=yes
 DisableDirPage=no
 AllowNoIcons=yes
 OutputDir=..\dist\installer
-OutputBaseFilename=PDFStudio-{#AppVersion}-Setup
+OutputBaseFilename=YUCE-PDF-Editor-{#AppVersion}-Setup
 SetupIconFile=..\pdfstudio\resources\icon.ico
 UninstallDisplayIcon={app}\{#AppExeName}
-UninstallDisplayName={#AppName} {#AppVersion}
+UninstallDisplayName={cm:AppTitle} {#AppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -55,23 +63,32 @@ Name: "turkish";  MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
-turkish.CreateDesktopIcon=Masaustu kisayolu olustur
-turkish.AssociatePdf=PDF dosyalarini "Birlikte ac" listesine ekle
-turkish.SetDefaultPdf=PDF dosyalari icin varsayilan uygulama yap
-turkish.LaunchApp={#AppName} uygulamasini baslat
-turkish.AdditionalIcons=Ek kisayollar:
-turkish.FileAssoc=Dosya iliskilendirmesi:
+turkish.AppTitle={#AppNameTr}
+turkish.CreateDesktopIcon=Masaüstü kısayolu oluştur
+turkish.AssociatePdf=PDF dosyalarını "Birlikte aç" listesine ekle
+turkish.SetDefaultPdf=PDF dosyaları için varsayılan uygulama yap
+turkish.LaunchApp={#AppNameTr} uygulamasını başlat
+turkish.AdditionalIcons=Ek kısayollar:
+turkish.FileAssoc=Dosya ilişkilendirmesi:
+turkish.PdfDocument=PDF Belgesi
+english.AppTitle={#AppNameEn}
 english.CreateDesktopIcon=Create a desktop shortcut
 english.AssociatePdf=Add to the "Open with" list for PDF files
 english.SetDefaultPdf=Make the default application for PDF files
-english.LaunchApp=Launch {#AppName}
+english.LaunchApp=Launch {#AppNameEn}
 english.AdditionalIcons=Additional shortcuts:
 english.FileAssoc=File association:
+english.PdfDocument=PDF Document
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "assocpdf";    Description: "{cm:AssociatePdf}";      GroupDescription: "{cm:FileAssoc}"
 Name: "defaultpdf";  Description: "{cm:SetDefaultPdf}";     GroupDescription: "{cm:FileAssoc}"; Flags: unchecked
+
+[InstallDelete]
+; 1.0.0 sürümünün "PDF Studio" adlı kısayollarını temizle
+Type: filesandordirs; Name: "{autoprograms}\PDF Studio"
+Type: files;          Name: "{autodesktop}\PDF Studio.lnk"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -79,12 +96,15 @@ Source: "..\README.md";  DestDir: "{app}"; DestName: "BENIOKU.md"; Flags: ignore
 Source: "LICENSE-notice.txt"; DestDir: "{app}"; DestName: "LISANS.txt"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#AppName}";                 Filename: "{app}\{#AppExeName}"
-Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#AppName}";           Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{group}\{cm:AppTitle}";                     Filename: "{app}\{#AppExeName}"
+Name: "{group}\{cm:UninstallProgram,{cm:AppTitle}}"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\{cm:AppTitle}";               Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Registry]
-; Uygulama kaydi - "Birlikte ac" listesinde gorunmesi icin
+; Uygulama kaydı - "Birlikte aç" listesinde görünmesi için
+Root: HKA; Subkey: "Software\Classes\Applications\{#AppExeName}"; \
+    ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{cm:AppTitle}"; \
+    Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Applications\{#AppExeName}\shell\open\command"; \
     ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""; \
     Flags: uninsdeletekey
@@ -95,19 +115,19 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#AppExeName}\SupportedTypes";
 
 ; Kendi ProgID'si
 Root: HKA; Subkey: "Software\Classes\PDFStudio.Document"; \
-    ValueType: string; ValueName: ""; ValueData: "PDF Belgesi"; \
+    ValueType: string; ValueName: ""; ValueData: "{cm:PdfDocument}"; \
     Flags: uninsdeletekey; Tasks: assocpdf
 Root: HKA; Subkey: "Software\Classes\PDFStudio.Document\DefaultIcon"; \
     ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"; Tasks: assocpdf
 Root: HKA; Subkey: "Software\Classes\PDFStudio.Document\shell\open\command"; \
     ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""; Tasks: assocpdf
 
-; .pdf icin "Birlikte ac" secenegi (varsayilani degistirmeden)
+; .pdf için "Birlikte aç" seçeneği (varsayılanı değiştirmeden)
 Root: HKA; Subkey: "Software\Classes\.pdf\OpenWithProgids"; \
     ValueType: string; ValueName: "PDFStudio.Document"; ValueData: ""; \
     Flags: uninsdeletevalue; Tasks: assocpdf
 
-; Istege bagli: varsayilan uygulama yap
+; İsteğe bağlı: varsayılan uygulama yap
 Root: HKA; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueName: ""; \
     ValueData: "PDFStudio.Document"; Flags: uninsdeletevalue; Tasks: defaultpdf
 

@@ -1,7 +1,7 @@
-PDF STUDIO - LISANS VE BILESEN BILGISI
-=======================================
+YUCE PDF EDITOR - LISANS VE BILESEN BILGISI
+============================================
 
-PDF Studio uygulama kodu serbestce kullanilabilir.
+YUCE PDF EDITOR (YUCE PDF Duzenleyici) uygulama kodu serbestce kullanilabilir.
 
 Uygulama asagidaki acik kaynak bilesenleri icerir; kendi lisanslari gecerlidir:
 

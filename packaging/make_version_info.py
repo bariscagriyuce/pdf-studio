@@ -30,13 +30,13 @@ VSVersionInfo(
     StringFileInfo([
       StringTable(
         '041F04B0',
-        [StringStruct('CompanyName', 'PDF Studio'),
-         StringStruct('FileDescription', 'PDF Studio - PDF Duzenleyici'),
+        [StringStruct('CompanyName', 'YUCE'),
+         StringStruct('FileDescription', 'YUCE PDF EDITOR'),
          StringStruct('FileVersion', '{display}'),
          StringStruct('InternalName', 'PDFStudio'),
          StringStruct('LegalCopyright', 'PyMuPDF (AGPL-3.0) ve PySide6 (LGPL-3.0) kullanir'),
          StringStruct('OriginalFilename', 'PDFStudio.exe'),
-         StringStruct('ProductName', 'PDF Studio'),
+         StringStruct('ProductName', 'YUCE PDF EDITOR'),
          StringStruct('ProductVersion', '{display}')])
     ]),
     VarFileInfo([VarStruct('Translation', [0x041F, 1200])])

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # ============================================================================
-#  PDF Studio — kendi kendini açan Linux kurulum dosyası
+#  YUCE PDF Düzenleyici — kendi kendini açan Linux kurulum dosyası
 #  Kullanım:
-#     bash PDFStudio-VERSION-x86_64.run              (etkileşimli kurulum)
-#     bash PDFStudio-VERSION-x86_64.run --uninstall  (kaldır)
-#     bash PDFStudio-VERSION-x86_64.run --help
+#     bash YUCE-PDF-Editor-VERSION-x86_64.run              (etkileşimli kurulum)
+#     bash YUCE-PDF-Editor-VERSION-x86_64.run --uninstall  (kaldır)
+#     bash YUCE-PDF-Editor-VERSION-x86_64.run --help
 # ============================================================================
 set -euo pipefail
 
-APP_NAME="PDF Studio"
+APP_NAME="YUCE PDF Düzenleyici"
+# Teknik kimlikler önceki sürümle aynı kalır (güncelleme ve kaldırma uyumu)
 APP_ID="pdf-studio"
 BIN_NAME="PDFStudio"
 VERSION="__VERSION__"
@@ -200,7 +201,8 @@ cat > "$DESKTOP_DIR/$APP_ID.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=PDF Studio
+Name=YUCE PDF EDITOR
+Name[tr]=YUCE PDF Düzenleyici
 GenericName=PDF Düzenleyici
 GenericName[en]=PDF Editor
 Comment=PDF dosyalarını görüntüleyin ve ayrıntılı olarak düzenleyin
@@ -243,9 +245,9 @@ say ""
 ok "${bold}Kurulum tamamlandı.${rst}"
 say ""
 say "  Başlatmak için:"
-say "    • Uygulama menüsünde ${bold}PDF Studio${rst} arayın"
+say "    • Uygulama menüsünde ${bold}$APP_NAME${rst} arayın"
 say "    • veya terminalde: ${bold}$APP_ID${rst}"
-say "    • veya bir PDF'e sağ tıklayıp ${bold}Birlikte aç → PDF Studio${rst}"
+say "    • veya bir PDF'e sağ tıklayıp ${bold}Birlikte aç → $APP_NAME${rst}"
 if ! printf '%s' ":$PATH:" | grep -q ":$BIN_DIR:"; then
     say ""
     warn "$BIN_DIR PATH içinde değil. Şunu ~/.bashrc veya ~/.config/fish/config.fish"

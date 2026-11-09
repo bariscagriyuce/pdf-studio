@@ -42,7 +42,8 @@ def run(screenshot: str | None = None, log_path: str | None = None) -> int:
             failures.append((name, traceback.format_exc()))
             out(f"  ✘ {name}: {exc}")
 
-    out("PDF Studio kendi kendini sınama")
+    from .branding import app_name
+    out(f"{app_name()} kendi kendini sınama")
     out(f"  Python   : {sys.version.split()[0]}")
     out(f"  PyMuPDF  : {pymupdf.__version__}")
     import PySide6

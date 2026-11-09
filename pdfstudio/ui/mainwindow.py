@@ -1,4 +1,4 @@
-"""PDF Studio ana penceresi."""
+"""YUCE PDF Düzenleyici ana penceresi."""
 from __future__ import annotations
 
 import os
@@ -33,7 +33,9 @@ from .tools import TOOL_LABELS, Tool
 
 from .. import __version__ as APP_VERSION
 
-APP_NAME = "PDF Studio"
+from ..branding import APP_NAME_EN, APP_NAME_TR, app_name
+
+APP_NAME = app_name()
 PDF_FILTER = "PDF dosyaları (*.pdf);;Tüm dosyalar (*)"
 IMAGE_FILTER = "Görüntüler (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff);;Tüm dosyalar (*)"
 
@@ -1836,7 +1838,8 @@ class MainWindow(QMainWindow):
     def help_about(self):
         QMessageBox.about(
             self, f"{APP_NAME} hakkında",
-            f"<h3>{APP_NAME} {APP_VERSION}</h3>"
+            f"<h3>{APP_NAME_TR} {APP_VERSION}</h3>"
+            f"<p><i>{APP_NAME_EN}</i></p>"
             "<p>Windows ve Linux üzerinde çalışan, ayrıntılı PDF düzenleme uygulaması.</p>"
             "<p>Motor: <b>PyMuPDF (MuPDF)</b> · Arayüz: <b>PySide6 (Qt 6)</b></p>"
             f"<p>PyMuPDF {pymupdf.__version__}</p>")

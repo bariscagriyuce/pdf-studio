@@ -1,9 +1,9 @@
-# Maintainer: PDF Studio
+# Maintainer: YUCE
 # Önceden derlenmiş PyInstaller çıktısını paketler (build-arch-package.sh üretir).
 pkgname=pdf-studio
 pkgver=__VERSION__
 pkgrel=1
-pkgdesc="Ayrıntılı PDF düzenleyici — metin düzenleme, açıklama, form, karartma, OCR"
+pkgdesc="YUCE PDF Düzenleyici (YUCE PDF EDITOR) — metin düzenleme, açıklama, form, karartma, OCR"
 arch=('x86_64')
 url="https://github.com/"
 license=('AGPL-3.0-or-later')

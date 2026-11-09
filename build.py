@@ -75,7 +75,7 @@ def main() -> int:
     print("✔ Sınama başarılı")
 
     if make_installer and not WINDOWS:
-        out = os.path.join(ROOT, f"PDFStudio-{VERSION}-x86_64.run")
+        out = os.path.join(ROOT, f"YUCE-PDF-Editor-{VERSION}-x86_64.run")
         rc = subprocess.call(
             ["bash", os.path.join(ROOT, "packaging", "make_linux_installer.sh"),
              os.path.join(dist, "PDFStudio"), out, VERSION], cwd=ROOT)
@@ -91,7 +91,7 @@ def main() -> int:
             rc = subprocess.call([iscc, f"/DAppVersion={VERSION}",
                                   os.path.join(ROOT, "packaging", "pdfstudio.iss")])
             if rc == 0:
-                print(f"\n✔ Kurulum sihirbazı: dist\\installer\\PDFStudio-{VERSION}-Setup.exe")
+                print(f"\n✔ Kurulum sihirbazı: dist\\installer\\YUCE-PDF-Editor-{VERSION}-Setup.exe")
             return rc
         print("\n! Inno Setup bulunamadı — kurulum sihirbazı atlandı.")
         print("  https://jrsoftware.org/isdl.php adresinden kurup tekrar deneyin.")

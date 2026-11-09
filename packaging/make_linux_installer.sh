@@ -4,7 +4,7 @@
 set -euo pipefail
 
 DIST_DIR="${1:?PyInstaller çıktı dizini gerekli (ör. dist/PDFStudio)}"
-OUT="${2:?çıktı dosyası gerekli (ör. PDFStudio-1.0-x86_64.run)}"
+OUT="${2:?çıktı dosyası gerekli (ör. YUCE-PDF-Editor-1.1.0-x86_64.run)}"
 VERSION="${3:-1.0}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 

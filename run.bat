@@ -1,5 +1,5 @@
 @echo off
-REM PDF Studio - Windows baslatici.
+REM YUCE PDF Duzenleyici - Windows baslatici.
 REM Ilk calistirmada sanal ortami kurar, sonrakilerde dogrudan acar.
 setlocal
 cd /d "%~dp0"

@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=PDF Studio
+Name=YUCE PDF EDITOR
+Name[tr]=YUCE PDF Düzenleyici
 GenericName=PDF Düzenleyici
 Comment=PDF dosyalarını görüntüleyin ve ayrıntılı olarak düzenleyin
 Exec=/opt/pdf-studio/run.sh %f

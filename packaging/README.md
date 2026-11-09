@@ -1,6 +1,6 @@
 # Paketleme
 
-Bu klasör, PDF Studio'yu kurulabilir dosyalara dönüştüren her şeyi içerir.
+Bu klasör, YUCE PDF Düzenleyici'yi kurulabilir dosyalara dönüştüren her şeyi içerir.
 
 | Dosya | Görevi |
 |---|---|
@@ -23,14 +23,14 @@ python3 -m venv build-venv
 build-venv/bin/python -m pip install PySide6-Essentials PyMuPDF pyinstaller
 build-venv/bin/python -m PyInstaller --noconfirm --clean packaging/pdfstudio.spec
 ./dist/PDFStudio/PDFStudio --self-test        # doğrula
-bash packaging/make_linux_installer.sh dist/PDFStudio PDFStudio-1.0.0-x86_64.run 1.0.0
+bash packaging/make_linux_installer.sh dist/PDFStudio YUCE-PDF-Editor-1.1.0-x86_64.run 1.1.0
 ```
 
 ## Arch / CachyOS paketi üretmek
 
 ```bash
-bash packaging/arch/build-arch-package.sh dist/PDFStudio 1.0.0
-sudo pacman -U pdf-studio-1.0.0-1-x86_64.pkg.tar.zst
+bash packaging/arch/build-arch-package.sh dist/PDFStudio 1.1.0
+sudo pacman -U pdf-studio-1.1.0-1-x86_64.pkg.tar.zst
 ```
 
 `PKGBUILD` içinde `options=('!strip')` **şart** — PyInstaller çıktısını
@@ -83,9 +83,9 @@ sınamadan geçirir ve çıktıları artefakt olarak yükler.
 
 | Dosya | Platform |
 |---|---|
-| `PDFStudio-1.0.0-Setup.exe` | Windows 10/11 — kurulum sihirbazı |
-| `PDFStudio-1.0.0-portable.exe` | Windows 10/11 — taşınabilir tek dosya |
-| `PDFStudio-1.0.0-x86_64.run` | Linux (glibc 2.35+) |
+| `YUCE-PDF-Editor-1.1.0-Setup.exe` | Windows 10/11 — kurulum sihirbazı |
+| `YUCE-PDF-Editor-1.1.0-portable.exe` | Windows 10/11 — taşınabilir tek dosya |
+| `YUCE-PDF-Editor-1.1.0-x86_64.run` | Linux (glibc 2.35+) |
 
 ## Boyut hakkında
 
