@@ -29,7 +29,6 @@ Aşağıda `<sürüm>` yerine indirdiğiniz sürümü (ör. `1.2.0`) yazın.
 | **Windows** (kurulumsuz) | `YUCE-PDF-Editor-<sürüm>-portable.exe` | Çift tıklayın, doğrudan çalışır |
 | **Linux** (glibc 2.35+) | `YUCE-PDF-Editor-<sürüm>-x86_64.run` | `bash YUCE-PDF-Editor-<sürüm>-x86_64.run` |
 | **macOS** 12+ (Apple Silicon: M1–M4) | `YUCE-PDF-Editor-<sürüm>-macOS-arm64.dmg` | Açın, uygulamayı *Applications*'a sürükleyin |
-| **macOS** 12+ (Intel) | `YUCE-PDF-Editor-<sürüm>-macOS-x86_64.dmg` | Açın, uygulamayı *Applications*'a sürükleyin |
 
 Python kurulu olması gerekmez; her şey pakete gömülüdür. Her dosya,
 yayımlanmadan önce gömülü sınamadan geçirilir; bütünlüğü sürüm sayfasındaki
@@ -49,8 +48,8 @@ Başlat menüsü kısayolu, isteğe bağlı masaüstü kısayolu ve PDF dosyalar
 
 #### macOS — `.dmg`
 
-Mac'inizin işlemcisine uygun dosyayı indirin ( → *Bu Mac Hakkında*: "Apple M…"
-ise `arm64`, "Intel" ise `x86_64`). `.dmg`'yi açın ve **YUCE PDF EDITOR**'ü
+Yalnızca Apple Silicon (M1 ve sonrası) Mac'ler desteklenir; Intel Mac'ler için
+sürüm yoktur. `.dmg`'yi açın ve **YUCE PDF EDITOR**'ü
 *Applications* klasörüne sürükleyin. Uygulama Finder'daki *Birlikte Aç* listesine
 eklenir; PDF'leri Dock simgesinin üzerine sürükleyerek de açabilirsiniz.
 

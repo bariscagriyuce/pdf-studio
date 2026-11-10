@@ -30,7 +30,6 @@ Abaixo, substitua `<versão>` pela versão baixada (ex.: `1.2.0`).
 | **Windows** (sem instalação) | `YUCE-PDF-Editor-<versão>-portable.exe` | Clique duas vezes; executa diretamente |
 | **Linux** (glibc 2.35+) | `YUCE-PDF-Editor-<versão>-x86_64.run` | `bash YUCE-PDF-Editor-<versão>-x86_64.run` |
 | **macOS** 12+ (Apple Silicon: M1–M4) | `YUCE-PDF-Editor-<versão>-macOS-arm64.dmg` | Abra e arraste o app para *Aplicativos* |
-| **macOS** 12+ (Intel) | `YUCE-PDF-Editor-<versão>-macOS-x86_64.dmg` | Abra e arraste o app para *Aplicativos* |
 
 Não é preciso ter o Python instalado; tudo vem embutido. Cada arquivo passa
 pelo autoteste embutido antes de ser publicado, e você pode verificar sua
@@ -52,8 +51,8 @@ de forma limpa pelo Painel de Controle.
 
 #### macOS — `.dmg`
 
-Baixe o arquivo do processador do seu Mac ( → *Sobre Este Mac*: "Apple M…"
-significa `arm64`, "Intel" significa `x86_64`). Abra o `.dmg` e arraste o
+Somente Macs com Apple Silicon (M1 ou posterior) são suportados; não há versão
+para Macs Intel. Abra o `.dmg` e arraste o
 **YUCE PDF EDITOR** para *Aplicativos*. O app aparece na lista *Abrir com* do
 Finder, e você também pode soltar PDFs sobre o ícone no Dock.
 

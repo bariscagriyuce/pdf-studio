@@ -47,11 +47,10 @@ strip etmek çalıştırılabiliri bozar.
 python3 -m venv build-venv
 build-venv/bin/python -m pip install "PySide6-Essentials>=6.8,<6.9" PyMuPDF pyinstaller
 build-venv/bin/python build.py
-# → dist/YUCE PDF EDITOR.app  +  dist/YUCE-PDF-Editor-<sürüm>-macOS-<arm64|x86_64>.dmg
+# → dist/YUCE PDF EDITOR.app  +  dist/YUCE-PDF-Editor-<sürüm>-macOS-arm64.dmg
 ```
 
-`.dmg` derlendiği mimaride çalışır (Apple Silicon → `arm64`, Intel → `x86_64`);
-CI ikisini de ayrı ayrı üretir.
+Yalnızca Apple Silicon (M1 ve sonrası, `arm64`) için derlenir; Intel Mac'ler desteklenmez.
 
 > **Başka Mac'lere dağıtılacak yapılar için Homebrew Python'u kullanmayın.**
 > Homebrew'un Python'u kendi macOS sürümünüz için derlenir; paket yalnızca o
@@ -98,7 +97,7 @@ değer türetilir.
 
 ## Otomatik derleme (GitHub Actions)
 
-`.github/workflows/build.yml` üç platformu da (Windows, Linux, macOS arm64 + x86_64) derler, her yapıyı gömülü
+`.github/workflows/build.yml` üç platformu da (Windows, Linux, macOS arm64) derler, her yapıyı gömülü
 sınamadan geçirir ve çıktıları artefakt olarak yükler.
 
 - **Elle çalıştırma:** depo → *Actions* → *Kurulum dosyalarını derle* → *Run workflow*
@@ -113,7 +112,6 @@ sınamadan geçirir ve çıktıları artefakt olarak yükler.
 | `YUCE-PDF-Editor-1.1.0-portable.exe` | Windows 10/11 — taşınabilir tek dosya |
 | `YUCE-PDF-Editor-1.1.0-x86_64.run` | Linux (glibc 2.35+) |
 | `YUCE-PDF-Editor-1.1.0-macOS-arm64.dmg` | macOS 12+ — Apple Silicon |
-| `YUCE-PDF-Editor-1.1.0-macOS-x86_64.dmg` | macOS 12+ — Intel |
 
 ## Boyut hakkında
 

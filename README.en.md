@@ -29,7 +29,6 @@ page. Below, replace `<version>` with the version you downloaded (e.g. `1.2.0`).
 | **Windows** (no install) | `YUCE-PDF-Editor-<version>-portable.exe` | Double-click; runs directly |
 | **Linux** (glibc 2.35+) | `YUCE-PDF-Editor-<version>-x86_64.run` | `bash YUCE-PDF-Editor-<version>-x86_64.run` |
 | **macOS** 12+ (Apple Silicon: M1–M4) | `YUCE-PDF-Editor-<version>-macOS-arm64.dmg` | Open it, drag the app to *Applications* |
-| **macOS** 12+ (Intel) | `YUCE-PDF-Editor-<version>-macOS-x86_64.dmg` | Open it, drag the app to *Applications* |
 
 Python does not need to be installed; everything is bundled. Every file passes
 the built-in self-test before it is published, and you can verify its integrity
@@ -49,8 +48,8 @@ all users. It adds a Start menu shortcut, an optional desktop shortcut and an
 
 #### macOS — `.dmg`
 
-Download the file that matches your Mac's processor ( → *About This Mac*:
-"Apple M…" means `arm64`, "Intel" means `x86_64`). Open the `.dmg` and drag
+Only Apple Silicon (M1 and later) Macs are supported; there is no build for
+Intel Macs. Open the `.dmg` and drag
 **YUCE PDF EDITOR** into *Applications*. The app appears in Finder's *Open With*
 list, and you can also drop PDFs onto its Dock icon.
 

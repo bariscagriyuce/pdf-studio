@@ -1,7 +1,7 @@
 name: Kurulum dosyalarını derle
 
 # YUCE PDF Düzenleyici: Windows kurulum sihirbazı + taşınabilir exe, Linux .run kurulumu
-# ve macOS .dmg (Apple Silicon + Intel) üretir.
+# ve macOS .dmg (Apple Silicon) üretir.
 # Elle çalıştırmak için: Actions sekmesi → "Kurulum dosyalarını derle" → Run workflow
 # Sürüm yayımlamak için:  git tag v1.2.3 && git push --tags
 #   → sürüm numarası etiketten okunur, tüm dosya adlarına ve exe özelliklerine işlenir
@@ -218,8 +218,6 @@ jobs:
         include:
           - runner: macos-14        # Apple Silicon
             arch: arm64
-          - runner: macos-15-intel  # Intel
-            arch: x86_64
     runs-on: ${{ matrix.runner }}
     env:
       APP_VERSION: ${{ needs.version.outputs.version }}
@@ -324,7 +322,6 @@ jobs:
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-portable.exe` | Windows 10/11 | Taşınabilir tek dosya — kurulum yok, çift tıkla çalışır |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-x86_64.run` | Linux (glibc 2.35+) | `bash YUCE-PDF-Editor-*.run` ile kurun, `--uninstall` ile kaldırın |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-macOS-arm64.dmg` | macOS 12+ (Apple Silicon: M1/M2/M3/M4) | Açın, uygulamayı Applications klasörüne sürükleyin. İlk açılışta: sağ tık → Aç |
-            | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-macOS-x86_64.dmg` | macOS 12+ (Intel) | Aynı şekilde |
 
             `SHA256SUMS.txt` ile dosya bütünlüğünü doğrulayabilirsiniz.
 
