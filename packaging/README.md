@@ -4,11 +4,12 @@ Bu klasör, YUCE PDF Düzenleyici'yi kurulabilir dosyalara dönüştüren her ş
 
 | Dosya | Görevi |
 |---|---|
-| `pdfstudio.spec` | PyInstaller yapılandırması (Linux + Windows ortak). `PDFSTUDIO_ONEFILE=1` ortam değişkeni tek dosyalık çıktı üretir. |
+| `pdfstudio.spec` | PyInstaller yapılandırması (Linux + Windows + macOS ortak; macOS'ta `.app` paketi de üretir). `PDFSTUDIO_ONEFILE=1` ortam değişkeni tek dosyalık çıktı üretir. |
 | `version_info.txt` | Windows `.exe` sürüm bilgisi — **üretilen dosya**, elle düzenlemeyin |
 | `make_version_info.py` | `version_info.txt` üreteci |
 | `set_version.py` | Sürümü tek komutla her yere işler (`__init__.py` + `version_info.txt`) |
-| `make_icons.py` | `icon.png` ve çok boyutlu `icon.ico` üreteci |
+| `make_icons.py` | `icon.png`, çok boyutlu `icon.ico` ve macOS `icon.icns` üreteci |
+| `make_macos_dmg.sh` | `.app` paketini imzalar (ad-hoc) ve sürükle-bırak `.dmg` üretir |
 | `pdfstudio.iss` | Inno Setup kurulum sihirbazı betiği |
 | `LICENSE-notice.txt` | Kurulumda gösterilen lisans metni |
 | `installer_header.sh` | Linux `.run` dosyasının kendi kendini açan başlığı |
@@ -39,6 +40,31 @@ strip etmek çalıştırılabiliri bozar.
 > Derlemeyi mümkün olan **en eski** dağıtımda yapın (Ubuntu 22.04 önerilir).
 > Üretilen dosya, derlendiği makinenin glibc sürümünden **eski** sistemlerde
 > çalışmaz. CI iş akışı bu yüzden `ubuntu-22.04` kullanır.
+
+## macOS kurulum dosyası üretmek
+
+```bash
+python3 -m venv build-venv
+build-venv/bin/python -m pip install "PySide6-Essentials>=6.8,<6.9" PyMuPDF pyinstaller
+build-venv/bin/python build.py
+# → dist/YUCE PDF EDITOR.app  +  dist/YUCE-PDF-Editor-<sürüm>-macOS-<arm64|x86_64>.dmg
+```
+
+`.dmg` derlendiği mimaride çalışır (Apple Silicon → `arm64`, Intel → `x86_64`);
+CI ikisini de ayrı ayrı üretir.
+
+> **Başka Mac'lere dağıtılacak yapılar için Homebrew Python'u kullanmayın.**
+> Homebrew'un Python'u kendi macOS sürümünüz için derlenir; paket yalnızca o
+> sürüm ve sonrasında açılır. [python.org](https://www.python.org/downloads/macos/)
+> kurulumu ya da `uv python install 3.12` macOS 11+ hedefler. Qt 6.9 ve sonrası
+> macOS 13/14+ istediği için PySide6 **6.8 LTS**'e sabitlenir → paket macOS 12+.
+> Kontrol: `vtool -show-build "dist/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio"`.
+
+İmza: Apple geliştirici hesabı olmadan uygulama **ad-hoc** imzalanır (Apple
+Silicon'da imzasız kod hiç çalışmaz). Notarize edilmediği için kullanıcı ilk
+açılışta *sağ tık → Aç* demelidir. Developer ID sertifikanız varsa:
+`MACOS_SIGN_IDENTITY="Developer ID Application: …" bash packaging/make_macos_dmg.sh …`
+(ardından `xcrun notarytool submit … --wait` ve `xcrun stapler staple`).
 
 ## Windows kurulum dosyası üretmek
 
@@ -72,7 +98,7 @@ değer türetilir.
 
 ## Otomatik derleme (GitHub Actions)
 
-`.github/workflows/build.yml` her iki platformu da derler, her yapıyı gömülü
+`.github/workflows/build.yml` üç platformu da (Windows, Linux, macOS arm64 + x86_64) derler, her yapıyı gömülü
 sınamadan geçirir ve çıktıları artefakt olarak yükler.
 
 - **Elle çalıştırma:** depo → *Actions* → *Kurulum dosyalarını derle* → *Run workflow*
@@ -86,6 +112,8 @@ sınamadan geçirir ve çıktıları artefakt olarak yükler.
 | `YUCE-PDF-Editor-1.1.0-Setup.exe` | Windows 10/11 — kurulum sihirbazı |
 | `YUCE-PDF-Editor-1.1.0-portable.exe` | Windows 10/11 — taşınabilir tek dosya |
 | `YUCE-PDF-Editor-1.1.0-x86_64.run` | Linux (glibc 2.35+) |
+| `YUCE-PDF-Editor-1.1.0-macOS-arm64.dmg` | macOS 12+ — Apple Silicon |
+| `YUCE-PDF-Editor-1.1.0-macOS-x86_64.dmg` | macOS 12+ — Intel |
 
 ## Boyut hakkında
 

@@ -4,7 +4,7 @@
 
 *YUCE PDF Düzenleyici*
 
-Editor de PDF para desktop **no estilo do Adobe Acrobat Pro**, para Windows e
+Editor de PDF para desktop **no estilo do Adobe Acrobat Pro**, para Windows, macOS e
 Linux. Edita o texto real do conteúdo da página, adiciona anotações, gerencia
 páginas, preenche formulários, aplica tarja (redação) de verdade e criptografa
 documentos.
@@ -13,7 +13,7 @@ documentos.
 |---|---|
 | **Motor** | PyMuPDF (MuPDF) — rápido, local, não precisa de conexão com a internet |
 | **Interface** | PySide6 (Qt 6) — tema escuro/claro; turco, inglês, português do Brasil |
-| **Plataformas** | Linux, Windows (também funciona no macOS) |
+| **Plataformas** | Windows, macOS, Linux |
 
 ---
 
@@ -29,6 +29,8 @@ Abaixo, substitua `<versão>` pela versão baixada (ex.: `1.2.0`).
 | **Windows** 10/11 | `YUCE-PDF-Editor-<versão>-Setup.exe` | Clique duas vezes e siga o assistente |
 | **Windows** (sem instalação) | `YUCE-PDF-Editor-<versão>-portable.exe` | Clique duas vezes; executa diretamente |
 | **Linux** (glibc 2.35+) | `YUCE-PDF-Editor-<versão>-x86_64.run` | `bash YUCE-PDF-Editor-<versão>-x86_64.run` |
+| **macOS** 12+ (Apple Silicon: M1–M4) | `YUCE-PDF-Editor-<versão>-macOS-arm64.dmg` | Abra e arraste o app para *Aplicativos* |
+| **macOS** 12+ (Intel) | `YUCE-PDF-Editor-<versão>-macOS-x86_64.dmg` | Abra e arraste o app para *Aplicativos* |
 
 Não é preciso ter o Python instalado; tudo vem embutido. Cada arquivo passa
 pelo autoteste embutido antes de ser publicado, e você pode verificar sua
@@ -47,6 +49,28 @@ Brasil e pode instalar só para você (sem direitos de administrador) ou para
 todos os usuários. Ele adiciona um atalho no menu Iniciar, um atalho opcional
 na área de trabalho e uma entrada "Abrir com" para arquivos PDF, e é removido
 de forma limpa pelo Painel de Controle.
+
+#### macOS — `.dmg`
+
+Baixe o arquivo do processador do seu Mac ( → *Sobre Este Mac*: "Apple M…"
+significa `arm64`, "Intel" significa `x86_64`). Abra o `.dmg` e arraste o
+**YUCE PDF EDITOR** para *Aplicativos*. O app aparece na lista *Abrir com* do
+Finder, e você também pode soltar PDFs sobre o ícone no Dock.
+
+> **Aviso "não pode ser verificado" na primeira abertura:** O app não é assinado
+> com um certificado de desenvolvedor Apple (não é notarizado), então o macOS avisa
+> na primeira vez. Abra-o uma vez assim: em *Aplicativos*, **clique com o botão
+> direito no ícone → Abrir → Abrir**. No macOS 15 ou posterior: tente abrir e depois
+> clique em **"Abrir Mesmo Assim"** em *Ajustes do Sistema → Privacidade e Segurança*.
+> Pelo Terminal:
+>
+> ```bash
+> xattr -dr com.apple.quarantine "/Applications/YUCE PDF EDITOR.app"
+> ```
+
+Para desinstalar, mova o app para o Lixo (ajustes:
+`~/Library/Preferences/com.pdfstudio.PDFStudio.plist`, cache:
+`~/Library/Caches/PDFStudio`).
 
 #### Linux — instalador `.run`
 
@@ -116,6 +140,7 @@ Para desenvolver ou testar suas próprias alterações:
 bash run.sh
 ```
 
+`bash run.sh` também funciona no macOS (requer Python 3.9+: `brew install python@3.12`).
 No Windows, `run.bat`. A primeira execução cria um ambiente virtual e baixa as
 dependências; as seguintes abrem na hora.
 
@@ -133,8 +158,15 @@ bash packaging/make_linux_installer.sh dist/PDFStudio YUCE-PDF-Editor-<versão>-
 bash packaging/arch/build-arch-package.sh dist/PDFStudio <versão>
 ```
 
+No macOS, um único comando gera o `.app` e o `.dmg`:
+
+```bash
+python3 build.py     # → dist/YUCE PDF EDITOR.app e dist/YUCE-PDF-Editor-<versão>-macOS-<arq>.dmg
+```
+
+Os arquivos de cada plataforma só podem ser gerados nela.
 Os arquivos do Windows não podem ser gerados no Linux. O fluxo
-`.github/workflows/build.yml` compila as duas plataformas nas máquinas do GitHub:
+`.github/workflows/build.yml` compila as três plataformas (Windows, Linux, macOS) nas máquinas do GitHub:
 
 - **Compilação manual:** repositório → *Actions* → *Kurulum dosyalarını derle* → *Run workflow*.
   Os resultados ficam guardados como artefatos por 90 dias.

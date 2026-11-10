@@ -4,7 +4,7 @@
 
 *YUCE PDF EDITOR*
 
-Windows ve Linux üzerinde çalışan, **Adobe Acrobat Pro benzeri** masaüstü PDF
+Windows, macOS ve Linux üzerinde çalışan, **Adobe Acrobat Pro benzeri** masaüstü PDF
 düzenleyici. Sayfa içeriğindeki gerçek metni düzenler, açıklama ekler, sayfaları
 yönetir, form doldurur, karartma (redaksiyon) uygular ve belgeyi şifreler.
 
@@ -12,7 +12,7 @@ yönetir, form doldurur, karartma (redaksiyon) uygular ve belgeyi şifreler.
 |---|---|
 | **Motor** | PyMuPDF (MuPDF) — hızlı, yerel, ağ bağlantısı gerektirmez |
 | **Arayüz** | PySide6 (Qt 6) — koyu/açık tema; Türkçe, İngilizce, Brezilya Portekizcesi |
-| **Platform** | Linux, Windows (macOS'ta da çalışır) |
+| **Platform** | Windows, macOS, Linux |
 
 ---
 
@@ -28,6 +28,8 @@ Aşağıda `<sürüm>` yerine indirdiğiniz sürümü (ör. `1.2.0`) yazın.
 | **Windows** 10/11 | `YUCE-PDF-Editor-<sürüm>-Setup.exe` | Çift tıklayın, sihirbazı izleyin |
 | **Windows** (kurulumsuz) | `YUCE-PDF-Editor-<sürüm>-portable.exe` | Çift tıklayın, doğrudan çalışır |
 | **Linux** (glibc 2.35+) | `YUCE-PDF-Editor-<sürüm>-x86_64.run` | `bash YUCE-PDF-Editor-<sürüm>-x86_64.run` |
+| **macOS** 12+ (Apple Silicon: M1–M4) | `YUCE-PDF-Editor-<sürüm>-macOS-arm64.dmg` | Açın, uygulamayı *Applications*'a sürükleyin |
+| **macOS** 12+ (Intel) | `YUCE-PDF-Editor-<sürüm>-macOS-x86_64.dmg` | Açın, uygulamayı *Applications*'a sürükleyin |
 
 Python kurulu olması gerekmez; her şey pakete gömülüdür. Her dosya,
 yayımlanmadan önce gömülü sınamadan geçirilir; bütünlüğü sürüm sayfasındaki
@@ -44,6 +46,27 @@ yayımlanmadan önce gömülü sınamadan geçirilir; bütünlüğü sürüm say
 yönetici hakkı istemeden yalnızca sizin için ya da tüm kullanıcılar için kurabilir.
 Başlat menüsü kısayolu, isteğe bağlı masaüstü kısayolu ve PDF dosyaları için
 "Birlikte aç" kaydı ekler; Denetim Masası'ndan temiz kaldırılır.
+
+#### macOS — `.dmg`
+
+Mac'inizin işlemcisine uygun dosyayı indirin ( → *Bu Mac Hakkında*: "Apple M…"
+ise `arm64`, "Intel" ise `x86_64`). `.dmg`'yi açın ve **YUCE PDF EDITOR**'ü
+*Applications* klasörüne sürükleyin. Uygulama Finder'daki *Birlikte Aç* listesine
+eklenir; PDF'leri Dock simgesinin üzerine sürükleyerek de açabilirsiniz.
+
+> **İlk açılışta "doğrulanamadı" uyarısı:** Uygulama Apple geliştirici
+> sertifikasıyla imzalanmadığı (notarize edilmediği) için macOS ilk açılışta
+> uyarır. Bir kez şöyle açın: *Applications*'ta simgeye **sağ tıklayın → Aç → Aç**.
+> macOS 15 ve sonrasında: önce açmayı deneyin, sonra *Sistem Ayarları → Gizlilik
+> ve Güvenlik* altındaki **"Yine de Aç"** düğmesine basın. Terminal'den:
+>
+> ```bash
+> xattr -dr com.apple.quarantine "/Applications/YUCE PDF EDITOR.app"
+> ```
+
+Kaldırmak için uygulamayı Çöp Sepeti'ne taşıyın (ayarlar:
+`~/Library/Preferences/com.pdfstudio.PDFStudio.plist`, önbellek:
+`~/Library/Caches/PDFStudio`).
 
 #### Linux — `.run` kurulumu
 
@@ -108,6 +131,7 @@ Geliştirme veya kendi değişikliklerinizi denemek için:
 bash run.sh
 ```
 
+macOS'ta da `bash run.sh` çalışır (Python 3.9+ gerekir: `brew install python@3.12`).
 Windows'ta `run.bat`. İlk çalıştırmada sanal ortam kurulur ve bağımlılıklar
 indirilir; sonraki açılışlar anında olur.
 
@@ -125,8 +149,15 @@ bash packaging/make_linux_installer.sh dist/PDFStudio YUCE-PDF-Editor-<sürüm>-
 bash packaging/arch/build-arch-package.sh dist/PDFStudio <sürüm>
 ```
 
+macOS'ta tek komut `.app` ve `.dmg` üretir:
+
+```bash
+python3 build.py     # → dist/YUCE PDF EDITOR.app ve dist/YUCE-PDF-Editor-<sürüm>-macOS-<mimari>.dmg
+```
+
+Her platformun dosyası yalnızca o platformda üretilebilir.
 Windows dosyalarını Linux'tan üretmek mümkün değildir. `.github/workflows/build.yml`
-iş akışı her iki platformu da GitHub'ın makinelerinde derler:
+iş akışı üç platformu da (Windows, Linux, macOS) GitHub'ın makinelerinde derler:
 
 - **Elle derleme:** depo → *Actions* → *Kurulum dosyalarını derle* → *Run workflow*.
   Çıktılar artefakt olarak 90 gün saklanır.

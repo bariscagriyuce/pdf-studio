@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Uygulama ikonlarını üretir: icon.png (512) ve çok boyutlu icon.ico.
+"""Uygulama ikonlarını üretir: icon.png (512), çok boyutlu icon.ico ve macOS icon.icns.
 
 Windows kabuğu ve Inno Setup, ikonun birden çok boyut içermesini bekler;
 tek boyutlu bir ICO küçük yerlerde bulanık görünür. ImageMagick'in ICO
@@ -135,6 +135,24 @@ def build_ico(path: str) -> None:
         fh.write(struct.pack("<HHH", 0, 1, count) + directory + payload)
 
 
+# macOS .icns: her girdi bir PNG taşır (OS X 10.7+). (tür kodu, piksel boyutu)
+ICNS_TYPES = [
+    (b"icp4", 16), (b"icp5", 32), (b"icp6", 64),
+    (b"ic07", 128), (b"ic08", 256), (b"ic09", 512), (b"ic10", 1024),
+    (b"ic11", 32), (b"ic12", 64), (b"ic13", 256), (b"ic14", 512),
+]
+
+
+def build_icns(path: str) -> None:
+    cache: dict[int, bytes] = {}
+    body = b""
+    for kind, size in ICNS_TYPES:
+        data = cache.setdefault(size, png_bytes(draw(size)))
+        body += kind + struct.pack(">I", 8 + len(data)) + data
+    with open(path, "wb") as fh:
+        fh.write(b"icns" + struct.pack(">I", 8 + len(body)) + body)
+
+
 def main() -> int:
     QApplication.instance() or QApplication([])  # QPixmap için gerekli
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -147,6 +165,10 @@ def main() -> int:
     build_ico(ico_path)
     print(f"OK: {ico_path} ({os.path.getsize(ico_path) / 1024:.0f} KB, "
           f"{len(BMP_SIZES) + len(PNG_SIZES)} sizes)")
+
+    icns_path = os.path.join(OUT_DIR, "icon.icns")
+    build_icns(icns_path)
+    print(f"OK: {icns_path} ({os.path.getsize(icns_path) / 1024:.0f} KB)")
     return 0
 
 

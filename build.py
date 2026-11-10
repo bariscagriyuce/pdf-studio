@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Kurulum dosyası üretir (çalıştığınız platform için).
 
-    python build.py              # klasör dağıtımı + Linux'ta .run kurulumu
+    python build.py              # klasör dağıtımı + Linux'ta .run, macOS'ta .app + .dmg
     python build.py --onefile    # taşınabilir tek dosya
     python build.py --no-installer
 
@@ -30,6 +30,7 @@ def _version() -> str:
 
 VERSION = _version()
 WINDOWS = sys.platform.startswith("win")
+MACOS = sys.platform == "darwin"
 
 
 def ensure(module: str, package: str | None = None) -> None:
@@ -42,6 +43,9 @@ def ensure(module: str, package: str | None = None) -> None:
 
 def main() -> int:
     onefile = "--onefile" in sys.argv
+    if onefile and MACOS:
+        print("macOS'ta --onefile desteklenmez; .app paketi üretilir.")
+        onefile = False
     make_installer = "--no-installer" not in sys.argv and not onefile
 
     ensure("PyInstaller", "pyinstaller")
@@ -73,6 +77,27 @@ def main() -> int:
         print("✖ Sınama BAŞARISIZ — ayrıntı:", log)
         return rc
     print("✔ Sınama başarılı")
+
+    if MACOS:
+        import platform
+        app = os.path.join(dist, "YUCE PDF EDITOR.app")
+        print("\n→ .app paketi sınanıyor…")
+        rc = subprocess.call([os.path.join(app, "Contents", "MacOS", "PDFStudio"),
+                              "--self-test"])
+        if rc != 0:
+            print("✖ .app sınaması BAŞARISIZ")
+            return rc
+        if not make_installer:
+            print(f"\n✔ Çıktı: {app}")
+            return 0
+        arch = platform.machine()  # arm64 / x86_64
+        out = os.path.join(dist, f"YUCE-PDF-Editor-{VERSION}-macOS-{arch}.dmg")
+        rc = subprocess.call(["bash", os.path.join(ROOT, "packaging", "make_macos_dmg.sh"),
+                              app, out], cwd=ROOT)
+        if rc == 0:
+            print(f"\n✔ Kurulum dosyası hazır: {out}")
+            print("  Açıp uygulamayı Applications klasörüne sürükleyin.")
+        return rc
 
     if make_installer and not WINDOWS:
         out = os.path.join(ROOT, f"YUCE-PDF-Editor-{VERSION}-x86_64.run")

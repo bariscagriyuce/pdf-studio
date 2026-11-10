@@ -127,7 +127,13 @@ class MainWindow(QMainWindow):
         if shortcut:
             a.setShortcut(QKeySequence(shortcut))
         a.setCheckable(checkable)
-        a.setToolTip(f"{text}  ({shortcut})" if shortcut else (tip or text))
+        if sys.platform == "darwin":
+            # Qt, metne bakarak bazı eylemleri uygulama menüsüne taşır ("Ayarlar",
+            # "Options"...). Tahmine bırakmayıp yalnızca Çıkış/Hakkında'yı taşıyoruz.
+            a.setMenuRole(QAction.NoRole)
+        # NativeText: macOS'ta "Ctrl+S" yerine "⌘S" gösterir
+        native = a.shortcut().toString(QKeySequence.NativeText) if shortcut else ""
+        a.setToolTip(f"{text}  ({native})" if shortcut else (tip or text))
         return a
 
     def _build_actions(self):
@@ -231,6 +237,9 @@ class MainWindow(QMainWindow):
 
         self.act_about = A("info", _("Hakkında"), self.help_about)
         self.act_shortcuts = A("info", _("Klavye kısayolları"), self.help_shortcuts)
+        # macOS: uygulama menüsünde (YUCE PDF EDITOR ▸ Hakkında / Çıkış) yer alırlar
+        self.act_quit.setMenuRole(QAction.QuitRole)
+        self.act_about.setMenuRole(QAction.AboutRole)
 
         # ---- araç grubu
         self.tool_actions: dict[Tool, QAction] = {}
@@ -550,7 +559,9 @@ class MainWindow(QMainWindow):
         for w in self.findChildren(QWidget):
             w.style().unpolish(w)
             w.style().polish(w)
-            w.update()
+            # QWidget.update(w): PySide6 6.8'de QAbstractItemView.update()
+            # argümansız çağrılamıyor (yalnızca update(index) aşırı yüklemesi görünüyor)
+            QWidget.update(w)
         self.update()
 
     def _icon_map(self) -> dict:
@@ -1914,7 +1925,7 @@ class MainWindow(QMainWindow):
     def help_about(self):
         QMessageBox.about(
             self, _("{APP_NAME} hakkında").format(APP_NAME=APP_NAME),
-            _("<h3>{APP_NAME_TR} {APP_VERSION}</h3><p><i>{APP_NAME_EN}</i></p><p>Windows ve Linux üzerinde çalışan, ayrıntılı PDF düzenleme uygulaması.</p><p>Motor: <b>PyMuPDF (MuPDF)</b> · Arayüz: <b>PySide6 (Qt 6)</b></p><p>PyMuPDF {0}</p>").format(pymupdf.__version__, APP_NAME_TR=APP_NAME_TR, APP_VERSION=APP_VERSION, APP_NAME_EN=APP_NAME_EN))
+            _("<h3>{APP_NAME_TR} {APP_VERSION}</h3><p><i>{APP_NAME_EN}</i></p><p>Windows, macOS ve Linux üzerinde çalışan, ayrıntılı PDF düzenleme uygulaması.</p><p>Motor: <b>PyMuPDF (MuPDF)</b> · Arayüz: <b>PySide6 (Qt 6)</b></p><p>PyMuPDF {0}</p>").format(pymupdf.__version__, APP_NAME_TR=APP_NAME_TR, APP_VERSION=APP_VERSION, APP_NAME_EN=APP_NAME_EN))
 
     def help_shortcuts(self):
         rows = [

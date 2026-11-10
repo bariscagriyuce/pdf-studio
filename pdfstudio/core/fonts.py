@@ -139,6 +139,8 @@ def cache_path() -> str:
     if sys.platform.startswith("win"):
         base = os.environ.get("APPDATA") or os.path.expanduser("~")
         d = os.path.join(base, "PDFStudio")
+    elif sys.platform == "darwin":
+        d = os.path.expanduser("~/Library/Caches/PDFStudio")
     else:
         base = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
         d = os.path.join(base, "pdfstudio")
@@ -251,7 +253,8 @@ class FontManager:
     def _squash(name: str) -> str:
         return "".join(ch for ch in (name or "").lower() if ch.isalnum())
 
-    def find(self, family: str, bold: bool = False, italic: bool = False) -> FontInfo | None:
+    def find(self, family: str, bold: bool = False, italic: bool = False,
+             partial: bool = True) -> FontInfo | None:
         fam = (family or "").lower()
         for key in ((fam, bold, italic), (fam, bold, False), (fam, False, italic),
                     (fam, False, False)):
@@ -267,6 +270,8 @@ class FontManager:
                     if (self._squash(f.family) == squashed and f.bold == want_b
                             and f.italic == want_i):
                         return f
+        if not partial:
+            return None
         # kısmi eşleşme
         for f in self.fonts:
             if fam and fam in f.family.lower() and f.bold == bold and f.italic == italic:
@@ -277,8 +282,10 @@ class FontManager:
         return None
 
     def default_unicode(self, bold: bool = False, italic: bool = False) -> FontInfo | None:
+        # Yalnızca tam eşleşme: macOS'ta düz "Noto Sans" yok ama "Noto Sans Adlam"
+        # gibi Türkçe glifleri olmayan alt aileler var; kısmi eşleşme onları seçerdi.
         for fam in PREFERRED_UNICODE:
-            f = self.find(fam, bold, italic)
+            f = self.find(fam, bold, italic, partial=False)
             if f:
                 return f
         return self.fonts[0] if self.fonts else None

@@ -1,5 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller yapılandırması — Linux ve Windows için ortak.
+"""PyInstaller yapılandırması — Linux, Windows ve macOS için ortak.
+
+macOS'ta klasör dağıtımına ek olarak dist/YUCE PDF EDITOR.app paketi üretilir.
 
 Kullanım:
     pyinstaller --noconfirm --clean packaging/pdfstudio.spec
@@ -9,6 +11,7 @@ import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(SPEC)), ".."))
 WINDOWS = sys.platform.startswith("win")
+MACOS = sys.platform == "darwin"
 
 # PDFSTUDIO_ONEFILE=1 → tek dosyalık taşınabilir çıktı; aksi hâlde klasör dağıtımı
 ONEFILE = os.environ.get("PDFSTUDIO_ONEFILE", "") == "1"
@@ -17,7 +20,14 @@ APP_NAME = os.environ.get("PDFSTUDIO_NAME", "PDFStudio")
 _version_file = os.path.join(ROOT, "packaging", "version_info.txt")
 VERSION_FILE = _version_file if (WINDOWS and os.path.exists(_version_file)) else None
 ICON_FILE = os.path.join(ROOT, "pdfstudio", "resources",
-                         "icon.ico" if WINDOWS else "icon.png")
+                         "icon.ico" if WINDOWS else "icon.icns" if MACOS else "icon.png")
+
+
+def _app_version() -> str:
+    import re
+    with open(os.path.join(ROOT, "pdfstudio", "__init__.py"), encoding="utf-8") as fh:
+        m = re.search(r'__version__\s*=\s*"([^"]+)"', fh.read())
+    return m.group(1) if m else "1.0.0"
 
 # Uygulamanın kullanmadığı Qt modülleri — paket boyutunu ciddi biçimde düşürür
 EXCLUDES = [
@@ -69,6 +79,10 @@ if not WINDOWS:
 
 pyz = PYZ(a.pure)
 
+# macOS'ta tek dosya yerine .app paketi kullanılır (tek dosya + .app desteklenmiyor)
+if ONEFILE and MACOS:
+    raise SystemExit("macOS'ta PDFSTUDIO_ONEFILE desteklenmez; .app paketi üretilir.")
+
 if ONEFILE:
     exe = EXE(
         pyz, a.scripts, a.binaries, a.datas, [],
@@ -100,4 +114,38 @@ else:
     coll = COLLECT(
         exe, a.binaries, a.datas,
         strip=False, upx=False, name=APP_NAME,
+    )
+
+if MACOS:
+    VERSION = _app_version()
+    NUMERIC = VERSION.split("-")[0].split("+")[0]
+    app = BUNDLE(
+        coll,
+        name="YUCE PDF EDITOR.app",
+        icon=ICON_FILE,
+        # Paket kimliği sabit kalmalı: değişirse ayarlar ve izinler sıfırlanır
+        bundle_identifier="com.yuce.pdfstudio",
+        version=NUMERIC,
+        info_plist={
+            "CFBundleName": "YUCE PDF EDITOR",
+            "CFBundleDisplayName": "YUCE PDF EDITOR",
+            "CFBundleShortVersionString": NUMERIC,
+            "CFBundleVersion": NUMERIC,
+            "CFBundleDevelopmentRegion": "tr",
+            "CFBundleLocalizations": ["tr", "en", "pt_BR"],
+            "LSApplicationCategoryType": "public.app-category.productivity",
+            "LSMinimumSystemVersion": "12.0",
+            "NSHighResolutionCapable": True,
+            "NSPrincipalClass": "NSApplication",
+            "NSRequiresAquaSystemAppearance": False,
+            "NSHumanReadableCopyright": "© YUCE",
+            # Finder → "Birlikte Aç" listesinde görünür, PDF'ler sürüklenebilir
+            "CFBundleDocumentTypes": [{
+                "CFBundleTypeName": "PDF Document",
+                "CFBundleTypeRole": "Editor",
+                "LSHandlerRank": "Alternate",
+                "LSItemContentTypes": ["com.adobe.pdf"],
+                "CFBundleTypeExtensions": ["pdf"],
+            }],
+        },
     )
