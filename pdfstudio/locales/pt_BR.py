@@ -1148,4 +1148,38 @@ MESSAGES = {
         'Mover o objeto selecionado',
     'Seçimi/çizimi iptal et':
         'Cancelar seleção/desenho',
+    'Soldan sağa, sonra aşağı':
+        'Da esquerda para a direita, depois para baixo',
+    'Sağdan sola, sonra aşağı':
+        'Da direita para a esquerda, depois para baixo',
+    'Yukarıdan aşağı, sonra sağa':
+        'De cima para baixo, depois para a direita',
+    'Yukarıdan aşağı, sonra sola':
+        'De cima para baixo, depois para a esquerda',
+    'Sayfa düzeni':
+        'Layout da página',
+    'Kâğıt başına sayfa':
+        'Páginas por folha',
+    'Hazır:':
+        'Predefinidos:',
+    'Satır:':
+        'Linhas:',
+    'Sütun:':
+        'Colunas:',
+    'Sayfa sırası:':
+        'Ordem das páginas:',
+    'Daha iyi sığıyorsa sayfayı döndür':
+        'Girar páginas quando couberem melhor',
+    'Her sayfanın çevresine çerçeve çiz':
+        'Desenhar borda em volta de cada página',
+    'Kâğıt boyutu ve kenar boşlukları yazıcı ayarlarından gelir. Sayfalar iki kez küçülmesin diye yazıcı özelliklerindeki "Pages per sheet" seçeneğini 1 olarak bırakın.':
+        'O tamanho do papel e as margens vêm das configurações da impressora. Deixe "Pages per sheet" nas propriedades da impressora em 1 para que as páginas não sejam reduzidas duas vezes.',
+    '= kâğıt başına {n} sayfa':
+        {'one': '= {n} página por folha', 'other': '= {n} páginas por folha'},
+    '{rows} satır × {cols} sütun':
+        '{rows} linhas × {cols} colunas',
+    'Bir kâğıda kaç sayfa basılacağını seçin':
+        'Escolha quantas páginas imprimir em uma folha',
+    'Kâğıt başına: {rows} × {cols}':
+        'Por folha: {rows} × {cols}',
 }

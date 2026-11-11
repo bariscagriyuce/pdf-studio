@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                                QListWidgetItem, QPlainTextEdit, QPushButton,
                                QRadioButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
-from ..i18n import N_, _
+from ..i18n import N_, _, _n
 from ..core import exporting, pageops, security
 from ..core.fonts import FontManager
 from ..core.textedit import TextStyle
@@ -1063,3 +1063,125 @@ class AreaPrintDialog(QDialog):
             "center": self.center_cb.isChecked(),
             "marks": self.marks_cb.isChecked(),
         }
+
+
+# ------------------------------------------------- kâğıt başına sayfa (N-up)
+class NupWidget(QWidget):
+    """Bir kâğıda kaç sayfa basılacağını serbestçe seçtiren ayarlar.
+
+    Yazdırma iletişim kutusuna ayrı bir sekme olarak eklenir; sistem kutusunun
+    sabit "Pages per sheet" seçeneklerinin yerine geçer.
+    """
+
+    ORDER_LABELS = {
+        "lrtb": N_("Soldan sağa, sonra aşağı"),
+        "rltb": N_("Sağdan sola, sonra aşağı"),
+        "tblr": N_("Yukarıdan aşağı, sonra sağa"),
+        "tbrl": N_("Yukarıdan aşağı, sonra sola"),
+    }
+
+    def __init__(self, opts=None, parent=None):
+        super().__init__(parent)
+        from ..core import nup
+        self._nup = nup
+        opts = (opts or nup.NupOptions()).normalized()
+        self.setWindowTitle(_("Sayfa düzeni"))
+
+        lay = QVBoxLayout(self)
+        grid_box = QGroupBox(_("Kâğıt başına sayfa"))
+        form = QFormLayout(grid_box)
+
+        presets = QHBoxLayout()
+        for r, c in ((1, 1), (1, 2), (2, 1), (2, 2), (2, 3), (3, 3), (4, 4)):
+            b = QPushButton(f"{r} × {c}")
+            b.setToolTip(_("{rows} satır × {cols} sütun").format(rows=r, cols=c))
+            b.clicked.connect(lambda _c=False, r=r, c=c: self._set_grid(r, c))
+            presets.addWidget(b)
+        presets.addStretch(1)
+        form.addRow(_("Hazır:"), presets)
+
+        size_row = QHBoxLayout()
+        self.rows = QSpinBox()
+        self.rows.setRange(1, nup.MAX_CELLS)
+        self.rows.setValue(opts.rows)
+        self.cols = QSpinBox()
+        self.cols.setRange(1, nup.MAX_CELLS)
+        self.cols.setValue(opts.cols)
+        size_row.addWidget(QLabel(_("Satır:")))
+        size_row.addWidget(self.rows)
+        size_row.addSpacing(12)
+        size_row.addWidget(QLabel(_("Sütun:")))
+        size_row.addWidget(self.cols)
+        size_row.addSpacing(12)
+        self.total_lbl = QLabel()
+        size_row.addWidget(self.total_lbl)
+        size_row.addStretch(1)
+        form.addRow(_("Özel:"), size_row)
+
+        self.order = QComboBox()
+        for key, label in self.ORDER_LABELS.items():
+            self.order.addItem(_(label), key)
+        self.order.setCurrentIndex(max(0, self.order.findData(opts.order)))
+        form.addRow(_("Sayfa sırası:"), self.order)
+
+        self.gap = QDoubleSpinBox()
+        self.gap.setRange(0.0, 100.0)
+        self.gap.setDecimals(1)
+        self.gap.setSingleStep(0.5)
+        self.gap.setSuffix(" mm")
+        self.gap.setValue(opts.gap_mm)
+        form.addRow(_("Aralık:"), self.gap)
+
+        self.autorotate = QCheckBox(_("Daha iyi sığıyorsa sayfayı döndür"))
+        self.autorotate.setChecked(opts.autorotate)
+        self.border = QCheckBox(_("Her sayfanın çevresine çerçeve çiz"))
+        self.border.setChecked(opts.border)
+        form.addRow("", self.autorotate)
+        form.addRow("", self.border)
+        lay.addWidget(grid_box)
+
+        hint = QLabel(_("Kâğıt boyutu ve kenar boşlukları yazıcı ayarlarından gelir. "
+                        "Sayfalar iki kez küçülmesin diye yazıcı özelliklerindeki "
+                        "\"Pages per sheet\" seçeneğini 1 olarak bırakın."))
+        hint.setProperty("hint", True)
+        hint.setWordWrap(True)
+        lay.addWidget(hint)
+        lay.addStretch(1)
+
+        self.rows.valueChanged.connect(self._update_total)
+        self.cols.valueChanged.connect(self._update_total)
+        self._update_total()
+
+    def _set_grid(self, rows: int, cols: int) -> None:
+        self.rows.setValue(rows)
+        self.cols.setValue(cols)
+
+    def _update_total(self) -> None:
+        n = self.rows.value() * self.cols.value()
+        self.total_lbl.setText(_n("= kâğıt başına {n} sayfa", n).format(n=n))
+
+    def options(self):
+        return self._nup.NupOptions(
+            rows=self.rows.value(), cols=self.cols.value(),
+            order=self.order.currentData() or "lrtb", gap_mm=self.gap.value(),
+            border=self.border.isChecked(), autorotate=self.autorotate.isChecked(),
+        ).normalized()
+
+
+class NupDialog(QDialog):
+    """NupWidget'ı tek başına gösterir (yerel yazdırma kutusu olan sistemler
+    ve baskı önizleme için)."""
+
+    def __init__(self, opts=None, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(_("Sayfa düzeni"))
+        lay = QVBoxLayout(self)
+        self.widget = NupWidget(opts, self)
+        lay.addWidget(self.widget)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self.accept)
+        bb.rejected.connect(self.reject)
+        lay.addWidget(bb)
+
+    def options(self):
+        return self.widget.options()

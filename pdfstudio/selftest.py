@@ -198,6 +198,20 @@ def run(screenshot: str | None = None, log_path: str | None = None) -> int:
         expect(n == 2, f"2 kâğıt bekleniyordu, {n} basıldı")
     check("seçili alanı yazdır", _area_print)
 
+    def _nup_print():
+        from PySide6.QtPrintSupport import QPrinter
+        from .core import nup
+        pr = QPrinter(QPrinter.HighResolution)
+        pr.setOutputFormat(QPrinter.PdfFormat)
+        pr.setOutputFileName(os.path.join(tmp, "nup_baski.pdf"))
+        total = win.document.page_count
+        opts = nup.NupOptions(rows=1, cols=2, gap_mm=2, border=True)
+        n = win._print_render(pr, opts)
+        want = (total + 1) // 2
+        expect(n == want, f"{want} kâğıt bekleniyordu, {n} basıldı")
+        expect(nup.cell_position(1, 2, 3, nup.TBLR) == (1, 0), "sayfa sırası yanlış")
+    check("kâğıt başına birden çok sayfa yazdır", _nup_print)
+
     ok, msg = exporting.tesseract_available()
     langs = exporting.available_languages() if ok else []
     out(f"  · OCR: {'var — ' + ', '.join(langs) if langs else 'yok (' + msg + ')'}")

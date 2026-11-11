@@ -1,6 +1,7 @@
 """YUCE PDF Düzenleyici ana penceresi."""
 from __future__ import annotations
 
+import json
 import os
 import sys
 
@@ -9,7 +10,8 @@ from PySide6.QtCore import QPointF, QProcess, QRectF, QSettings, QSize, Qt, QTim
 from PySide6.QtGui import (QAction, QActionGroup, QColor, QGuiApplication, QImage,
                            QPageLayout, QPen,
                            QKeySequence, QPainter)
-from PySide6.QtPrintSupport import QPrintDialog, QPrinter, QPrintPreviewDialog
+from PySide6.QtPrintSupport import (QPrintDialog, QPrinter, QPrintPreviewDialog,
+                                   QPrintPreviewWidget)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDockWidget, QFileDialog,
                                QInputDialog, QLabel, QMainWindow, QMenu, QMessageBox,
                                QProgressDialog, QSizePolicy, QSpinBox, QTabWidget,
@@ -18,6 +20,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDockWidget, QFileDialog
 from ..i18n import N_, _, _n
 from ..core import annots as an
 from ..core import areaprint as ap
+from ..core import nup
 from ..core import exporting, forms as fm, images as im, pageops, security
 from ..core import textedit as te
 from ..core.document import PasswordRequired, PdfDocument
@@ -819,47 +822,143 @@ class MainWindow(QMainWindow):
         self.recent_menu.addAction(clear)
 
     # ----------------------------------------------------------------- yazdırma
-    def _print_render(self, printer: QPrinter):
+    def _nup_options(self) -> nup.NupOptions:
+        raw = self.settings_store.value("print/nup", "")
+        try:
+            return nup.NupOptions.from_dict(json.loads(raw) if raw else None)
+        except (TypeError, ValueError):
+            return nup.NupOptions()
+
+    def _save_nup_options(self, opts: nup.NupOptions) -> None:
+        self.settings_store.setValue("print/nup", json.dumps(opts.to_dict()))
+
+    def _print_pages(self, printer: QPrinter) -> list[int]:
+        total = self.document.page_count
+        if printer.printRange() == QPrinter.PageRange:
+            a = max(1, printer.fromPage() or 1)
+            b = min(total, printer.toPage() or total)
+            return list(range(a - 1, b))
+        return list(range(total))
+
+    def _print_render(self, printer: QPrinter, opts: nup.NupOptions | None = None) -> int:
+        """Sayfaları kâğıtlara çizer (kâğıt başına satır × sütun sayfa).
+
+        Basılan kâğıt sayısını döndürür."""
+        opts = (opts or self._nup_options()).normalized()
+        pages = self._print_pages(printer)
         painter = QPainter()
         if not painter.begin(printer):
-            return
-        pages = range(self.document.page_count)
-        first = True
-        for pno in pages:
-            if not first:
-                printer.newPage()
-            first = False
-            page = self.document.page(pno)
-            res = printer.resolution() or 300
-            zoom = res / 72.0
-            pm = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), alpha=False)
-            img = QImage(pm.samples, pm.width, pm.height, pm.stride,
-                         QImage.Format_RGB888).copy()
-            rect = painter.viewport()
-            scaled = img.size()
-            scaled.scale(rect.size(), Qt.KeepAspectRatio)
-            x = rect.x() + (rect.width() - scaled.width()) // 2
-            y = rect.y() + (rect.height() - scaled.height()) // 2
-            painter.drawImage(
-                type(rect)(x, y, scaled.width(), scaled.height()), img)
-        painter.end()
+            return 0
+        printed = 0
+        try:
+            res = float(printer.resolution() or 300)
+            to_px = res / 72.0
+            vp = painter.viewport()
+            gap = opts.gap_mm * 72 / 25.4 * to_px
+            grid = nup.cell_rects(vp.width(), vp.height(), opts.rows, opts.cols, gap)
+            pen = QPen(Qt.black)
+            pen.setWidthF(max(1.0, 0.25 * 72 / 25.4 * to_px))   # 0,25 mm
+            for chunk in nup.sheets(pages, opts.per_sheet):
+                if printed:
+                    printer.newPage()
+                printed += 1
+                for i, pno in enumerate(chunk):
+                    r, c = nup.cell_position(i, opts.rows, opts.cols, opts.order)
+                    cx, cy, cw, ch = grid[r][c]
+                    page = self.document.page(pno)
+                    pw, ph = page.rect.width, page.rect.height
+                    x, y, w, h, rot = nup.fit_in_cell(
+                        pw, ph, (vp.x() + cx, vp.y() + cy, cw, ch), opts.autorotate)
+                    if w < 1 or h < 1:
+                        continue
+                    # Kâğıttaki boyuta göre çözünürlük; bellek için en çok
+                    # 600 DPI ve ~80 megapiksel.
+                    zoom = (h if rot else w) / pw
+                    if res > 600:
+                        zoom *= 600 / res
+                    max_px = 80_000_000
+                    if pw * ph * zoom * zoom > max_px:
+                        zoom = (max_px / (pw * ph)) ** 0.5
+                    zoom = max(zoom, 0.5)
+                    pm = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), alpha=False)
+                    img = QImage(pm.samples, pm.width, pm.height, pm.stride,
+                                 QImage.Format_RGB888).copy()
+                    painter.save()
+                    painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+                    if rot:
+                        painter.translate(x + w / 2, y + h / 2)
+                        painter.rotate(90)
+                        painter.drawImage(QRectF(-h / 2, -w / 2, h, w), img)
+                    else:
+                        painter.drawImage(QRectF(x, y, w, h), img)
+                    painter.restore()
+                    if opts.border:
+                        painter.save()
+                        painter.setPen(pen)
+                        painter.setBrush(Qt.NoBrush)
+                        painter.drawRect(QRectF(x, y, w, h))
+                        painter.restore()
+        finally:
+            painter.end()
+        return printed
 
     def file_print(self):
         if not self.document.is_open:
             return
         printer = QPrinter(QPrinter.HighResolution)
+        printer.setDocName(self.document.display_name)
+        opts = self._nup_options()
+        native = sys.platform.startswith(("win", "darwin"))
+        if native:
+            # Windows/macOS yerel yazdırma kutusuna sekme eklenemez; sayfa
+            # düzeni önce ayrı bir pencerede sorulur.
+            nd = dlg.NupDialog(opts, self)
+            if not nd.exec():
+                return
+            opts = nd.options()
+            self._save_nup_options(opts)
         d = QPrintDialog(printer, self)
         d.setWindowTitle(_("Yazdır"))
+        d.setMinMax(1, self.document.page_count)
+        tab = None
+        if not native:
+            tab = dlg.NupWidget(opts)
+            d.setOptionTabs([tab])
         if d.exec():
-            self._print_render(printer)
+            if tab is not None:
+                opts = tab.options()
+                self._save_nup_options(opts)
+            self._print_render(printer, opts)
 
     def file_print_preview(self):
         if not self.document.is_open:
             return
         printer = QPrinter(QPrinter.HighResolution)
+        printer.setDocName(self.document.display_name)
         d = QPrintPreviewDialog(printer, self)
         d.resize(1000, 800)
-        d.paintRequested.connect(self._print_render)
+        d.paintRequested.connect(lambda pr: self._print_render(pr))
+        tb = d.findChild(QToolBar)
+        preview = d.findChild(QPrintPreviewWidget)
+        if tb is not None and preview is not None:
+            act = QAction(self)
+
+            def label():
+                o = self._nup_options()
+                act.setText(_("Kâğıt başına: {rows} × {cols}").format(rows=o.rows, cols=o.cols))
+
+            def change():
+                nd = dlg.NupDialog(self._nup_options(), d)
+                if nd.exec():
+                    self._save_nup_options(nd.options())
+                    label()
+                    preview.updatePreview()
+
+            label()
+            act.setToolTip(_("Bir kâğıda kaç sayfa basılacağını seçin"))
+            act.triggered.connect(change)
+            tb.addSeparator()
+            tb.addAction(act)
         d.exec()
 
     # ------------------------------------------------------- seçili alanı yazdır

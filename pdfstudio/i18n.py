@@ -167,4 +167,36 @@ def install_qt_translators(app) -> list:
                 app.installTranslator(tr)
                 loaded.append(tr)
                 break
+    if loaded:
+        fb = _mnemonic_fallback(app, list(loaded))
+        app.installTranslator(fb)
+        loaded.append(fb)
     return loaded
+
+
+def _mnemonic_fallback(app, bases: list):
+    """Qt'nin yeni sürümleri bazı metinlere kısayol işareti ekledi
+    ("Pages per sheet:" → "Pages &per sheet:"), ama Qt'nin kendi çeviri
+    dosyalarında bu metinler eski hâlleriyle duruyor; eşleşmedikleri için
+    yazdırma penceresinde İngilizce kalıyorlar. Bu çevirmen, karşılığı
+    bulunamayan metni '&' olmadan bir daha arar."""
+    from PySide6.QtCore import QTranslator
+
+    class MnemonicFallback(QTranslator):
+        def translate(self, context, source, disambiguation=None, n=-1):
+            if not source or "&" not in source:
+                return ""
+            for t in bases:
+                if t.translate(context, source, disambiguation, n):
+                    return ""          # zaten çevriliyor, karışma
+            plain = source.replace("&&", "\0").replace("&", "").replace("\0", "&&")
+            for t in bases:
+                text = t.translate(context, plain, disambiguation, n)
+                if text:
+                    return text if "&" in text else "&" + text
+            return ""
+
+        def isEmpty(self):
+            return False
+
+    return MnemonicFallback(app)

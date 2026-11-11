@@ -1148,4 +1148,38 @@ MESSAGES = {
         'Move the selected object',
     'Seçimi/çizimi iptal et':
         'Cancel selection/drawing',
+    'Soldan sağa, sonra aşağı':
+        'Left to right, then down',
+    'Sağdan sola, sonra aşağı':
+        'Right to left, then down',
+    'Yukarıdan aşağı, sonra sağa':
+        'Top to bottom, then right',
+    'Yukarıdan aşağı, sonra sola':
+        'Top to bottom, then left',
+    'Sayfa düzeni':
+        'Page layout',
+    'Kâğıt başına sayfa':
+        'Pages per sheet',
+    'Hazır:':
+        'Presets:',
+    'Satır:':
+        'Rows:',
+    'Sütun:':
+        'Columns:',
+    'Sayfa sırası:':
+        'Page order:',
+    'Daha iyi sığıyorsa sayfayı döndür':
+        'Rotate pages when they fit better',
+    'Her sayfanın çevresine çerçeve çiz':
+        'Draw a border around each page',
+    'Kâğıt boyutu ve kenar boşlukları yazıcı ayarlarından gelir. Sayfalar iki kez küçülmesin diye yazıcı özelliklerindeki "Pages per sheet" seçeneğini 1 olarak bırakın.':
+        'Paper size and margins come from the printer settings. Leave "Pages per sheet" in the printer properties at 1 so pages are not shrunk twice.',
+    '= kâğıt başına {n} sayfa':
+        {'one': '= {n} page per sheet', 'other': '= {n} pages per sheet'},
+    '{rows} satır × {cols} sütun':
+        '{rows} rows × {cols} columns',
+    'Bir kâğıda kaç sayfa basılacağını seçin':
+        'Choose how many pages to print on one sheet',
+    'Kâğıt başına: {rows} × {cols}':
+        'Per sheet: {rows} × {cols}',
 }
