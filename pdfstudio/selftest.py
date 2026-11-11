@@ -169,9 +169,24 @@ def run(screenshot: str | None = None, log_path: str | None = None) -> int:
             for code in ("tr", "pt_BR"):
                 i18n.set_language(code)
                 loaded = i18n.install_qt_translators(app)
-                for t in loaded:
-                    app.removeTranslator(t)
-                expect(loaded, f"{code} için Qt çevirisi bulunamadı")
+                try:
+                    expect(loaded, f"{code} için Qt çevirisi bulunamadı")
+                    # Çevirisi olmayan metin İngilizce kalmalı, boşalmamalı
+                    # (1.4.0/1.4.1'de yazdırma penceresi bu yüzden boş görünüyordu)
+                    from PySide6.QtCore import QCoreApplication
+                    for ctx, src in (("QPrintDialog", "Copies"),
+                                     ("QPlatformTheme", "OK"),
+                                     ("QPageSetupWidget", "Pages &per sheet:"),
+                                     ("PdfStudioSelfTest", "&Untranslated text")):
+                        got = QCoreApplication.translate(ctx, src)
+                        expect(got.strip("&"), f"{code}: {ctx}/{src!r} boş çevrildi")
+                    expect("&" in QCoreApplication.translate("QPageSetupWidget", "Pages &per sheet:")
+                           and "sheet" not in QCoreApplication.translate(
+                               "QPageSetupWidget", "Pages &per sheet:"),
+                           f"{code}: kısayol işaretli metin çevrilmedi")
+                finally:
+                    for t in loaded:
+                        app.removeTranslator(t)
         finally:
             i18n.set_language(before)
     check("Qt çevirileri (tr/pt_BR)", _qt_translations)

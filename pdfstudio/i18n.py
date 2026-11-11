@@ -185,16 +185,16 @@ def _mnemonic_fallback(app, bases: list):
     class MnemonicFallback(QTranslator):
         def translate(self, context, source, disambiguation=None, n=-1):
             if not source or "&" not in source:
-                return ""
+                return None
             for t in bases:
                 if t.translate(context, source, disambiguation, n):
-                    return ""          # zaten çevriliyor, karışma
+                    return None          # zaten çevriliyor, karışma
             plain = source.replace("&&", "\0").replace("&", "").replace("\0", "&&")
             for t in bases:
                 text = t.translate(context, plain, disambiguation, n)
                 if text:
                     return text if "&" in text else "&" + text
-            return ""
+            return None
 
         def isEmpty(self):
             return False
