@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import sys
 
-from PySide6.QtCore import QEvent, QLocale, Qt
+from PySide6.QtCore import QEvent, QLocale, Qt, QTimer
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QApplication
 
@@ -121,6 +121,9 @@ def main(argv: list[str] | None = None) -> int:
 
     from .core.fonts import FontManager
     FontManager.instance()
+
+    # Yeni sürüm denetimi: açılışı yavaşlatmasın diye biraz sonra, arka planda
+    QTimer.singleShot(5000, win.updater.check_on_startup)
 
     return app.exec()
 

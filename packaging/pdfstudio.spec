@@ -67,7 +67,7 @@ a = Analysis(
         (os.path.join(ROOT, "pdfstudio", "resources", "icon.png"), "pdfstudio/resources"),
         (os.path.join(ROOT, "pdfstudio", "resources", "icon.ico"), "pdfstudio/resources"),
     ],
-    hiddenimports=["pymupdf", "PySide6.QtSvg", "PySide6.QtPrintSupport"],
+    hiddenimports=["pymupdf", "PySide6.QtSvg", "PySide6.QtPrintSupport", "PySide6.QtNetwork"],
     hookspath=[], hooksconfig={}, runtime_hooks=[],
     excludes=EXCLUDES,
     noarchive=False, optimize=2,

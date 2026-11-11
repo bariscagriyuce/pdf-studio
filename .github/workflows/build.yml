@@ -208,6 +208,42 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  # ========================================================= ARCH LINUX
+  # Arch/CachyOS'ta pacman ile kurulmuş uygulamanın kendini güncelleyebilmesi
+  # için .run içindeki aynı derlemeden bir .pkg.tar.zst üretir.
+  arch:
+    name: Arch Linux paketi
+    needs: [version, linux]
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    env:
+      APP_NUMERIC: ${{ needs.version.outputs.numeric }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-kurulum
+          path: run
+
+      - name: Paketi derle
+        run: |
+          pacman -Sy --noconfirm --needed zstd xz tar
+          bash run/*.run --extract /tmp/dist
+          useradd -m builder
+          mkdir -p out
+          chown -R builder: /tmp/dist out
+          su builder -c "OUT_DIR='$PWD/out' bash packaging/arch/build-arch-package.sh /tmp/dist/PDFStudio '$APP_NUMERIC'"
+          ls -lh out
+
+      - name: Çıktıyı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-paket
+          path: out/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 90
+
   # ============================================================= MACOS
   macos:
     name: macOS (${{ matrix.arch }} .dmg)
@@ -330,7 +366,7 @@ jobs:
   # =========================================================== YAYIMLA
   release:
     name: Sürüm yayımla
-    needs: [version, windows, linux, macos]
+    needs: [version, windows, linux, arch, macos]
     if: needs.version.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -343,7 +379,7 @@ jobs:
       - name: Dosyaları topla
         run: |
           mkdir -p yayin
-          find cikti -type f \( -name '*.exe' -o -name '*.run' -o -name '*.dmg' \) -exec cp {} yayin/ \;
+          find cikti -type f \( -name '*.exe' -o -name '*.run' -o -name '*.dmg' -o -name '*.pkg.tar.zst' \) -exec cp {} yayin/ \;
           cd yayin
           sha256sum * > SHA256SUMS.txt
           ls -lh
@@ -364,7 +400,10 @@ jobs:
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-Setup.exe` | Windows 10/11 | Kurulum sihirbazı — Başlat menüsü, masaüstü kısayolu, PDF ilişkilendirmesi, Denetim Masası'ndan kaldırma |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-portable.exe` | Windows 10/11 | Taşınabilir tek dosya — kurulum yok, çift tıkla çalışır |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-x86_64.run` | Linux (glibc 2.35+) | `bash YUCE-PDF-Editor-*.run` ile kurun, `--uninstall` ile kaldırın |
+            | `pdf-studio-${{ needs.version.outputs.numeric }}-1-x86_64.pkg.tar.zst` | Arch Linux / CachyOS | `sudo pacman -U pdf-studio-*.pkg.tar.zst` ile kurun |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-macOS-arm64.dmg` | macOS 12+ (Apple Silicon: M1/M2/M3/M4) | Açın, uygulamayı Applications klasörüne sürükleyin |
+
+            Kurulu uygulama yeni sürümleri kendisi bulur: **Yardım → Güncellemeleri denetle**.
 
             `SHA256SUMS.txt` ile dosya bütünlüğünü doğrulayabilirsiniz.
 

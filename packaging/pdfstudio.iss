@@ -143,6 +143,15 @@ Root: HKA; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueName: ""; \
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchApp}"; \
     Flags: nowait postinstall skipifsilent
+; Uygulama içinden güncelleme: sessiz kurulum bitince yeni sürümü yeniden aç
+Filename: "{app}\{#AppExeName}"; Flags: nowait runasoriginaluser; Check: ShouldRelaunch
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\PDFStudio"
+
+[Code]
+// Uygulama, güncellemeyi "/SILENT /RELAUNCH=1" ile başlatır
+function ShouldRelaunch: Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:RELAUNCH|0}') = '1');
+end;

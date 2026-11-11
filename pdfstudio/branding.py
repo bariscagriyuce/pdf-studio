@@ -19,6 +19,9 @@ EXE_NAME = "PDFStudio"          # PDFStudio.exe / PDFStudio
 APP_ID = "pdf-studio"           # komut, .desktop, pacman paketi, /opt dizini
 SETTINGS_ORG = "PDFStudio"      # QSettings ve önbellek klasörleri
 
+# Güncellemelerin denetlendiği GitHub deposu (Releases)
+GITHUB_REPO = "bariscagriyuce/pdf-studio"
+
 
 def app_name(lang: str | None = None) -> str:
     """Türkçe arayüzde 'YUCE PDF Düzenleyici', diğer dillerde 'YUCE PDF EDITOR'.

@@ -1182,4 +1182,60 @@ MESSAGES = {
         'Escolha quantas páginas imprimir em uma folha',
     'Kâğıt başına: {rows} × {cols}':
         'Por folha: {rows} × {cols}',
+    '<h3>Yeni sürüm hazır: {new}</h3><p>Kullandığınız sürüm: {current}</p>':
+        '<h3>Nova versão disponível: {new}</h3><p>Sua versão: {current}</p>',
+    'Açılışta güncellemeleri denetle':
+        'Verificar atualizações ao iniciar',
+    'Bu kurulum kendiliğinden güncellenemiyor; indirme sayfası tarayıcıda açılacak.':
+        'Esta instalação não pode se atualizar sozinha; a página de download será aberta no navegador.',
+    'Bu sürümü atla':
+        'Pular esta versão',
+    'Dosya doğrulanıyor…':
+        'Verificando arquivo…',
+    'En son sürümü kullanıyorsunuz ({0}).':
+        'Você está usando a versão mais recente ({0}).',
+    'Güncelleme':
+        'Atualização',
+    'Güncelleme denetlenemedi:\n{0}':
+        'Não foi possível verificar atualizações:\n{0}',
+    'Güncelleme indiriliyor…':
+        'Baixando atualização…',
+    'Güncelleme indiriliyor… {0:.1f} / {1:.1f} MB':
+        'Baixando atualização… {0:.1f} / {1:.1f} MB',
+    'Güncelleme var':
+        'Atualização disponível',
+    'Güncellemeler denetleniyor…':
+        'Verificando atualizações…',
+    'Güncellemeleri denetle…':
+        'Verificar atualizações…',
+    'Henüz yayımlanmış bir sürüm yok.':
+        'Nenhuma versão foi publicada ainda.',
+    'Kullanmaya başlamak için uygulama yeniden başlatılmalı. Şimdi yeniden başlatılsın mı?':
+        'O aplicativo precisa ser reiniciado para usá-la. Reiniciar agora?',
+    'Kurulum başarısız oldu (çıkış kodu {0}).':
+        'A instalação falhou (código de saída {0}).',
+    'Kurulum başlatılamadı.':
+        'Não foi possível iniciar o instalador.',
+    'Kurulum iptal edildi (yönetici izni verilmedi).':
+        'Instalação cancelada (permissão de administrador não concedida).',
+    'Kuruluyor… (parola sorulabilir)':
+        'Instalando… (sua senha pode ser solicitada)',
+    'Sürüm notu yok.':
+        'Sem notas da versão.',
+    'Yeni sürüm indirildi ama kurulum için yönetici izni gerekiyor. Terminalde şu komutu çalıştırın:\n\nsudo {0}':
+        'A nova versão foi baixada, mas a instalação requer permissão de administrador. Execute este comando no terminal:\n\nsudo {0}',
+    'Yeni sürüm indirildi. Açılan pencerede uygulamayı Applications klasörüne sürükleyip eskisinin yerine koyun.':
+        'A nova versão foi baixada. Na janela que se abrir, arraste o aplicativo para a pasta Aplicativos para substituir o antigo.',
+    'Yeni sürüm kuruldu.':
+        'A nova versão foi instalada.',
+    'İndirilen dosya bozuk (SHA-256 uyuşmuyor). Lütfen daha sonra yeniden deneyin.':
+        'O arquivo baixado está corrompido (SHA-256 não confere). Tente novamente mais tarde.',
+    'İndirilen dosya doğrulanamadı (özet listesinde yok).':
+        'Não foi possível verificar o arquivo baixado (não está na lista de somas).',
+    'İndirme başarısız:\n{0}':
+        'Falha no download:\n{0}',
+    'İndirme sayfasını aç':
+        'Abrir página de download',
+    'Şimdi güncelle':
+        'Atualizar agora',
 }

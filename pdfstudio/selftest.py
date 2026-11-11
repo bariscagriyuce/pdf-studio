@@ -212,6 +212,33 @@ def run(screenshot: str | None = None, log_path: str | None = None) -> int:
         expect(nup.cell_position(1, 2, 3, nup.TBLR) == (1, 0), "sayfa sırası yanlış")
     check("kâğıt başına birden çok sayfa yazdır", _nup_print)
 
+    def _updater():
+        from .core import updater as up
+        expect(up.is_newer("v1.10.0", "1.9.3") and not up.is_newer("v1.4", "1.4.0"),
+               "sürüm karşılaştırması yanlış")
+        rel = up.parse_release({"tag_name": "v9.1.0", "body": "", "html_url": "",
+                                "assets": [{"name": n, "browser_download_url": "https://x/" + n}
+                                           for n in ("YUCE-PDF-Editor-9.1.0-Setup.exe",
+                                                     "YUCE-PDF-Editor-9.1.0-x86_64.run",
+                                                     "YUCE-PDF-Editor-9.1.0-macOS-arm64.dmg",
+                                                     "pdf-studio-9.1.0-1-x86_64.pkg.tar.zst")]})
+        expect(rel is not None, "sürüm bilgisi okunamadı")
+        for kind, want in ((up.WIN_SETUP, "Setup.exe"), (up.LINUX_RUN_USER, ".run"),
+                           (up.LINUX_PACMAN, ".pkg.tar.zst")):
+            a = up.pick_asset(rel, kind)
+            expect(a and a.name.endswith(want), f"{kind} için dosya seçilemedi")
+        expect(up.pick_asset(rel, up.MAC_APP, "arm64").name.endswith(".dmg"), "dmg seçilemedi")
+        expect(up.pick_asset(rel, up.WIN_PORTABLE) is None, "taşınabilir için dosya seçilmemeli")
+        expect(up.mac_bundle_path("/Applications/Y.app/Contents/MacOS/PDFStudio")
+               == "/Applications/Y.app", "macOS paket yolu yanlış")
+        sums = up.parse_checksums("a" * 64 + "  pdf-studio-9.1.0-1-x86_64.pkg.tar.zst\n")
+        expect(sums.get("pdf-studio-9.1.0-1-x86_64.pkg.tar.zst") == "a" * 64, "özet okunamadı")
+        expect(hasattr(win, "updater"), "güncelleme yöneticisi yok")
+        from PySide6.QtNetwork import QSslSocket
+        expect(QSslSocket.supportsSsl(), "TLS desteği yok (GitHub'a bağlanılamaz)")
+        out(f"  · Kurulum türü: {win.updater.kind}")
+    check("güncelleme denetimi", _updater)
+
     ok, msg = exporting.tesseract_available()
     langs = exporting.available_languages() if ok else []
     out(f"  · OCR: {'var — ' + ', '.join(langs) if langs else 'yok (' + msg + ')'}")

@@ -33,6 +33,7 @@ from .pageview import (LAYOUT_CONTINUOUS, LAYOUT_FACING, LAYOUT_FACING_COVER,
 from .panels import (AnnotationPanel, FormPanel, ImagePanel, OutlinePanel, SearchPanel,
                      ThumbnailPanel)
 from .theme import THEMES, stylesheet
+from .updater import UpdateManager
 from .tools import TOOL_LABELS, Tool
 
 from .. import __version__ as APP_VERSION
@@ -239,6 +240,15 @@ class MainWindow(QMainWindow):
                                        self.export_embedded_images)
 
         self.act_about = A("info", _("Hakkında"), self.help_about)
+        self.updater = UpdateManager(self)
+        self.act_check_updates = A("globe", _("Güncellemeleri denetle…"),
+                                   lambda: self.updater.check(manual=True))
+        self.act_auto_updates = QAction(_("Açılışta güncellemeleri denetle"), self)
+        self.act_auto_updates.setCheckable(True)
+        self.act_auto_updates.setChecked(self.updater.auto_enabled())
+        self.act_auto_updates.toggled.connect(self.updater.set_auto_enabled)
+        # macOS: uygulama menüsüne (Hakkında'nın yanına) taşınır
+        self.act_check_updates.setMenuRole(QAction.ApplicationSpecificRole)
         self.act_shortcuts = A("info", _("Klavye kısayolları"), self.help_shortcuts)
         # macOS: uygulama menüsünde (YUCE PDF EDITOR ▸ Hakkında / Çıkış) yer alırlar
         self.act_quit.setMenuRole(QAction.QuitRole)
@@ -494,6 +504,10 @@ class MainWindow(QMainWindow):
 
         m = mb.addMenu(_("&Yardım"))
         m.addAction(self.act_shortcuts)
+        m.addSeparator()
+        m.addAction(self.act_check_updates)
+        m.addAction(self.act_auto_updates)
+        m.addSeparator()
         m.addAction(self.act_about)
         self._refresh_recent()
 

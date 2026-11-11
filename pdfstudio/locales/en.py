@@ -1182,4 +1182,60 @@ MESSAGES = {
         'Choose how many pages to print on one sheet',
     'Kâğıt başına: {rows} × {cols}':
         'Per sheet: {rows} × {cols}',
+    '<h3>Yeni sürüm hazır: {new}</h3><p>Kullandığınız sürüm: {current}</p>':
+        '<h3>New version available: {new}</h3><p>Your version: {current}</p>',
+    'Açılışta güncellemeleri denetle':
+        'Check for updates at startup',
+    'Bu kurulum kendiliğinden güncellenemiyor; indirme sayfası tarayıcıda açılacak.':
+        'This installation cannot update itself; the download page will open in your browser.',
+    'Bu sürümü atla':
+        'Skip this version',
+    'Dosya doğrulanıyor…':
+        'Verifying file…',
+    'En son sürümü kullanıyorsunuz ({0}).':
+        'You are using the latest version ({0}).',
+    'Güncelleme':
+        'Update',
+    'Güncelleme denetlenemedi:\n{0}':
+        'Could not check for updates:\n{0}',
+    'Güncelleme indiriliyor…':
+        'Downloading update…',
+    'Güncelleme indiriliyor… {0:.1f} / {1:.1f} MB':
+        'Downloading update… {0:.1f} / {1:.1f} MB',
+    'Güncelleme var':
+        'Update available',
+    'Güncellemeler denetleniyor…':
+        'Checking for updates…',
+    'Güncellemeleri denetle…':
+        'Check for updates…',
+    'Henüz yayımlanmış bir sürüm yok.':
+        'No version has been published yet.',
+    'Kullanmaya başlamak için uygulama yeniden başlatılmalı. Şimdi yeniden başlatılsın mı?':
+        'The app must be restarted to use it. Restart now?',
+    'Kurulum başarısız oldu (çıkış kodu {0}).':
+        'Installation failed (exit code {0}).',
+    'Kurulum başlatılamadı.':
+        'Could not start the installer.',
+    'Kurulum iptal edildi (yönetici izni verilmedi).':
+        'Installation cancelled (administrator permission was not granted).',
+    'Kuruluyor… (parola sorulabilir)':
+        'Installing… (you may be asked for your password)',
+    'Sürüm notu yok.':
+        'No release notes.',
+    'Yeni sürüm indirildi ama kurulum için yönetici izni gerekiyor. Terminalde şu komutu çalıştırın:\n\nsudo {0}':
+        'The new version was downloaded, but installing it requires administrator permission. Run this command in a terminal:\n\nsudo {0}',
+    'Yeni sürüm indirildi. Açılan pencerede uygulamayı Applications klasörüne sürükleyip eskisinin yerine koyun.':
+        'The new version was downloaded. In the window that opens, drag the app to the Applications folder to replace the old one.',
+    'Yeni sürüm kuruldu.':
+        'The new version has been installed.',
+    'İndirilen dosya bozuk (SHA-256 uyuşmuyor). Lütfen daha sonra yeniden deneyin.':
+        'The downloaded file is corrupt (SHA-256 mismatch). Please try again later.',
+    'İndirilen dosya doğrulanamadı (özet listesinde yok).':
+        'The downloaded file could not be verified (not in the checksum list).',
+    'İndirme başarısız:\n{0}':
+        'Download failed:\n{0}',
+    'İndirme sayfasını aç':
+        'Open download page',
+    'Şimdi güncelle':
+        'Update now',
 }
