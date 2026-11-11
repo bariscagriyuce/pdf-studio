@@ -59,9 +59,21 @@ ln -s /Applications "$STAGE/Applications"
 
 rm -f "$OUT"
 echo "→ DMG oluşturuluyor…"
-hdiutil create -volname "$VOLNAME" -srcfolder "$STAGE" -fs HFS+ \
-    -format UDZO -imagekey zlib-level=9 -ov "$OUT" >/dev/null 2>&1
-hdiutil verify "$OUT" >/dev/null 2>&1
+# GitHub'ın macOS makinelerinde hdiutil ara sıra "Resource busy" ile düşüyor;
+# birkaç kez yeniden denenir. Hata çıktısı gizlenmez (yalnızca kullanımdan
+# kaldırılma uyarısı süzülür).
+ok=0
+for attempt in 1 2 3 4 5; do
+    if hdiutil create -volname "$VOLNAME" -srcfolder "$STAGE" -fs HFS+ \
+            -format UDZO -imagekey zlib-level=9 -ov "$OUT" 2>&1 \
+            | grep -v "is deprecated" >&2; [ "${PIPESTATUS[0]}" -eq 0 ]; then
+        ok=1; break
+    fi
+    echo "  hdiutil başarısız (deneme $attempt/5), yeniden deneniyor…" >&2
+    sleep $((attempt * 5))
+done
+[ "$ok" = 1 ] || { echo "✖ DMG oluşturulamadı" >&2; exit 1; }
+hdiutil verify "$OUT" 2>&1 | grep -v "is deprecated" | tail -1
 
 if [ "$IDENTITY" != "-" ]; then
     codesign --force --timestamp --sign "$IDENTITY" "$OUT"
