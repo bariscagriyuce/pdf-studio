@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import sys
 
-from PySide6.QtCore import QLocale, Qt
+from PySide6.QtCore import QEvent, QLocale, Qt
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QApplication
 
@@ -22,6 +22,28 @@ def app_icon() -> QIcon:
     for size in (16, 24, 32, 48, 64, 128, 256):
         ic.addPixmap(icons.pixmap("reader", size, "#4f8cff", width=1.4, dpr=1.0))
     return ic
+
+
+class Application(QApplication):
+    """macOS'ta Finder'dan "Birlikte Aç" / çift tıklama / Dock'a sürükleme,
+    dosyayı komut satırıyla değil QFileOpenEvent ile iletir. Pencere henüz
+    hazır değilse yol saklanır ve pencere açılınca yüklenir."""
+
+    def __init__(self, argv):
+        super().__init__(argv)
+        self.window = None
+        self.pending_files: list[str] = []
+
+    def event(self, ev):
+        if ev.type() == QEvent.FileOpen:
+            path = ev.file()
+            if path and path.lower().endswith(".pdf"):
+                if self.window is not None:
+                    self.window.open_path(path)
+                else:
+                    self.pending_files.append(path)
+            return True
+        return super().event(ev)
 
 
 def usage() -> str:
@@ -75,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
     from .branding import APP_ID, EXE_NAME, SETTINGS_ORG
     from .ui.mainwindow import APP_NAME, MainWindow
 
-    app = QApplication(argv)
+    app = Application(argv)
     # Sayı/tarih biçimi arayüz diliyle tutarlı olsun (2.00 / 2,00)
     QLocale.setDefault(QLocale(i18n.current()))
     # Qt'nin kendi pencereleri (Evet/Hayır, dosya/renk seçici, baskı önizleme)
@@ -92,6 +114,10 @@ def main(argv: list[str] | None = None) -> int:
     # Yazı tipi taraması ilk açılışta uzun sürebilir; arka planda hazırlanır.
     win = MainWindow()
     win.show()
+    app.window = win
+    if app.pending_files:
+        # Finder'dan gelen dosya, komut satırındaki dosyanın önüne geçer
+        sys.argv = [sys.argv[0], app.pending_files[-1]]
 
     from .core.fonts import FontManager
     FontManager.instance()

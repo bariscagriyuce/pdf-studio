@@ -1,6 +1,7 @@
 name: Kurulum dosyalarını derle
 
-# YUCE PDF Düzenleyici: Windows kurulum sihirbazı + taşınabilir exe ve Linux .run kurulumu üretir.
+# YUCE PDF Düzenleyici: Windows kurulum sihirbazı + taşınabilir exe, Linux .run kurulumu
+# ve macOS .dmg (Apple Silicon) üretir.
 # Elle çalıştırmak için: Actions sekmesi → "Kurulum dosyalarını derle" → Run workflow
 # Sürüm yayımlamak için:  git tag v1.2.3 && git push --tags
 #   → sürüm numarası etiketten okunur, tüm dosya adlarına ve exe özelliklerine işlenir
@@ -207,10 +208,86 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  # ============================================================= MACOS
+  macos:
+    name: macOS (${{ matrix.arch }} .dmg)
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15        # Apple Silicon
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    env:
+      APP_VERSION: ${{ needs.version.outputs.version }}
+      # 12 Monterey ve sonrası (Info.plist'teki LSMinimumSystemVersion ile aynı)
+      MACOSX_DEPLOYMENT_TARGET: '12.0'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Python bağımlılıkları
+        # Qt 6.8 LTS: macOS 12+ destekler. Qt 6.9+ macOS 13/14+ ister,
+        # bu da eski Mac'leri dışarıda bırakırdı.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "PySide6-Essentials>=6.8,<6.9" "PyMuPDF>=1.24" pyinstaller
+
+      - name: Sürümü dosyalara işle
+        run: python packaging/set_version.py "$APP_VERSION"
+
+      - name: Derle (.app)
+        run: |
+          pyinstaller --noconfirm --clean packaging/pdfstudio.spec
+          test -x "dist/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio"
+          file "dist/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio"
+
+      - name: Kendi kendini sınama (.app)
+        run: '"dist/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio" --self-test'
+
+      - name: En düşük macOS sürümünü denetle (12.0)
+        run: |
+          # Paketteki hiçbir ikili 12.0'dan yeni macOS istememeli
+          BAD=$(find "dist/YUCE PDF EDITOR.app" -type f \( -name '*.so' -o -name '*.dylib' -o -perm +111 \) -print0 \
+            | xargs -0 -n1 sh -c 'vtool -show-build "$0" 2>/dev/null || true' | awk '/minos/{print $2}' \
+            | sort -V | uniq | awk -F. '$1>12')
+          if [ -n "$BAD" ]; then echo "macOS 12'den yeni sürüm isteyen ikililer var: $BAD"; exit 1; fi
+          echo "Tüm ikililer macOS 12+ ile uyumlu ✔"
+
+      - name: DMG oluştur
+        run: |
+          DMG="dist/YUCE-PDF-Editor-${APP_VERSION}-macOS-${{ matrix.arch }}.dmg"
+          bash packaging/make_macos_dmg.sh "dist/YUCE PDF EDITOR.app" "$DMG"
+          ls -lh dist/*.dmg
+
+      - name: DMG'yi sına (bağla → kopyala → çalıştır)
+        run: |
+          DMG="dist/YUCE-PDF-Editor-${APP_VERSION}-macOS-${{ matrix.arch }}.dmg"
+          MNT="$(mktemp -d)"
+          hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$DMG"
+          DEST="$(mktemp -d)"
+          cp -R "$MNT/YUCE PDF EDITOR.app" "$DEST/"
+          hdiutil detach "$MNT"
+          codesign --verify --deep --strict "$DEST/YUCE PDF EDITOR.app"
+          "$DEST/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio" --self-test
+
+      - name: Çıktıyı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-kurulum-${{ matrix.arch }}
+          path: dist/*.dmg
+          if-no-files-found: error
+          retention-days: 90
+
   # =========================================================== YAYIMLA
   release:
     name: Sürüm yayımla
-    needs: [version, windows, linux]
+    needs: [version, windows, linux, macos]
     if: needs.version.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -223,7 +300,7 @@ jobs:
       - name: Dosyaları topla
         run: |
           mkdir -p yayin
-          find cikti -type f \( -name '*.exe' -o -name '*.run' \) -exec cp {} yayin/ \;
+          find cikti -type f \( -name '*.exe' -o -name '*.run' -o -name '*.dmg' \) -exec cp {} yayin/ \;
           cd yayin
           sha256sum * > SHA256SUMS.txt
           ls -lh
@@ -244,6 +321,7 @@ jobs:
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-Setup.exe` | Windows 10/11 | Kurulum sihirbazı — Başlat menüsü, masaüstü kısayolu, PDF ilişkilendirmesi, Denetim Masası'ndan kaldırma |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-portable.exe` | Windows 10/11 | Taşınabilir tek dosya — kurulum yok, çift tıkla çalışır |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-x86_64.run` | Linux (glibc 2.35+) | `bash YUCE-PDF-Editor-*.run` ile kurun, `--uninstall` ile kaldırın |
+            | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-macOS-arm64.dmg` | macOS 12+ (Apple Silicon: M1/M2/M3/M4) | Açın, uygulamayı Applications klasörüne sürükleyin. İlk açılışta: sağ tık → Aç |
 
             `SHA256SUMS.txt` ile dosya bütünlüğünü doğrulayabilirsiniz.
 

@@ -108,8 +108,8 @@ MESSAGES = {
         'Estilo Markdown (.md)',
     '\n----- Sayfa {0} -----\n{txt}':
         '\n----- Página {0} -----\n{txt}',
-    "tesseract bulunamadı (Linux: 'tesseract' + 'tesseract-data-tur', Windows: Tesseract-OCR kurulumu)":
-        "o tesseract não foi encontrado (Linux: 'tesseract' + 'tesseract-data-por', Windows: instale o Tesseract-OCR)",
+    "tesseract bulunamadı (Linux: 'tesseract' + 'tesseract-data-tur', macOS: 'brew install tesseract tesseract-lang', Windows: Tesseract-OCR kurulumu)":
+        "o tesseract não foi encontrado (Linux: 'tesseract' + 'tesseract-data-por', macOS: 'brew install tesseract tesseract-lang', Windows: instale o Tesseract-OCR)",
     'TESSDATA_PREFIX ayarlanmamış':
         'TESSDATA_PREFIX não está definido',
     '(hiçbiri)':
@@ -1110,8 +1110,8 @@ MESSAGES = {
         'Não foi possível reiniciar o aplicativo. Feche-o e abra-o novamente.',
     '{APP_NAME} hakkında':
         'Sobre o {APP_NAME}',
-    '<h3>{APP_NAME_TR} {APP_VERSION}</h3><p><i>{APP_NAME_EN}</i></p><p>Windows ve Linux üzerinde çalışan, ayrıntılı PDF düzenleme uygulaması.</p><p>Motor: <b>PyMuPDF (MuPDF)</b> · Arayüz: <b>PySide6 (Qt 6)</b></p><p>PyMuPDF {0}</p>':
-        '<h3>{APP_NAME_EN} {APP_VERSION}</h3><p><i>{APP_NAME_TR}</i></p><p>Aplicativo completo de edição de PDF para Windows e Linux.</p><p>Motor: <b>PyMuPDF (MuPDF)</b> · Interface: <b>PySide6 (Qt 6)</b></p><p>PyMuPDF {0}</p>',
+    '<h3>{APP_NAME_TR} {APP_VERSION}</h3><p><i>{APP_NAME_EN}</i></p><p>Windows, macOS ve Linux üzerinde çalışan, ayrıntılı PDF düzenleme uygulaması.</p><p>Motor: <b>PyMuPDF (MuPDF)</b> · Arayüz: <b>PySide6 (Qt 6)</b></p><p>PyMuPDF {0}</p>':
+        '<h3>{APP_NAME_EN} {APP_VERSION}</h3><p><i>{APP_NAME_TR}</i></p><p>Aplicativo completo de edição de PDF para Windows, macOS e Linux.</p><p>Motor: <b>PyMuPDF (MuPDF)</b> · Interface: <b>PySide6 (Qt 6)</b></p><p>PyMuPDF {0}</p>',
     'Aç / Kaydet':
         'Abrir / Salvar',
     'Geri al / Yinele':

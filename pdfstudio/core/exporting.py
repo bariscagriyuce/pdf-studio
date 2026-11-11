@@ -105,7 +105,7 @@ def tesseract_available() -> tuple[bool, str]:
     exe = shutil.which("tesseract")
     tessdata = os.environ.get("TESSDATA_PREFIX", "")
     if not exe:
-        return False, _("tesseract bulunamadı (Linux: 'tesseract' + 'tesseract-data-tur', Windows: Tesseract-OCR kurulumu)")
+        return False, _("tesseract bulunamadı (Linux: 'tesseract' + 'tesseract-data-tur', macOS: 'brew install tesseract tesseract-lang', Windows: Tesseract-OCR kurulumu)")
     if not tessdata:
         for cand in ("/usr/share/tessdata", "/usr/share/tesseract-ocr/5/tessdata",
                      "/usr/local/share/tessdata",
