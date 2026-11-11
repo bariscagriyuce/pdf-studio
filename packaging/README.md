@@ -59,11 +59,28 @@ Yalnızca Apple Silicon (M1 ve sonrası, `arm64`) için derlenir; Intel Mac'ler 
 > macOS 13/14+ istediği için PySide6 **6.8 LTS**'e sabitlenir → paket macOS 12+.
 > Kontrol: `vtool -show-build "dist/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio"`.
 
-İmza: Apple geliştirici hesabı olmadan uygulama **ad-hoc** imzalanır (Apple
-Silicon'da imzasız kod hiç çalışmaz). Notarize edilmediği için kullanıcı ilk
-açılışta *sağ tık → Aç* demelidir. Developer ID sertifikanız varsa:
-`MACOS_SIGN_IDENTITY="Developer ID Application: …" bash packaging/make_macos_dmg.sh …`
-(ardından `xcrun notarytool submit … --wait` ve `xcrun stapler staple`).
+### İmza ve Apple onayı (notarization)
+
+`packaging/make_macos_dmg.sh` ortam değişkenlerine göre çalışır:
+
+| Değişken | Etkisi |
+|---|---|
+| (hiçbiri) | **ad-hoc** imza — Apple Silicon'da çalışır ama ilk açılışta Gatekeeper uyarısı çıkar |
+| `MACOS_SIGN_IDENTITY="Developer ID Application: …"` | Developer ID + hardened runtime ile imza (`macos-entitlements.plist`) |
+| + `MACOS_NOTARY_PROFILE=<profil>` | Apple'a onaylatır, bileti `.dmg`'ye zımbalar → uyarısız açılır |
+
+Yerel profil bir kez kaydedilir (uygulamaya özel şifre: account.apple.com):
+
+```bash
+xcrun notarytool store-credentials pdfstudio-notary --team-id MPRDU9BAS3
+MACOS_SIGN_IDENTITY="Developer ID Application: BARIS YUCE (MPRDU9BAS3)" \
+MACOS_NOTARY_PROFILE=pdfstudio-notary python3 build.py
+```
+
+CI aynı işi depo secret'larıyla yapar: `MACOS_CERTIFICATE_P12` (base64 `.p12`),
+`MACOS_CERTIFICATE_PASSWORD`, `MACOS_NOTARY_APPLE_ID`, `MACOS_NOTARY_PASSWORD`.
+Secret'lar yoksa (ör. fork'tan gelen PR) ad-hoc imzalı `.dmg` üretilir.
+Developer ID sertifikası 2027-12'de sona erer; yenilenince `.p12` secret'ı güncellenmelidir.
 
 ## Windows kurulum dosyası üretmek
 

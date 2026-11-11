@@ -219,8 +219,14 @@ jobs:
           - runner: macos-15        # Apple Silicon
             arch: arm64
     runs-on: ${{ matrix.runner }}
+    # İlk notarization isteği Apple tarafında uzun sürebilir
+    timeout-minutes: 90
     env:
       APP_VERSION: ${{ needs.version.outputs.version }}
+      # İmza sertifikası tanımlıysa Developer ID ile imzalanır ve Apple'a onaylatılır;
+      # tanımlı değilse (ör. fork'tan gelen PR) ad-hoc imzalı .dmg üretilir.
+      HAS_SIGNING: ${{ secrets.MACOS_CERTIFICATE_P12 != '' }}
+      MACOS_NOTARY_TEAM_ID: MPRDU9BAS3
       # 12 Monterey ve sonrası (Info.plist'teki LSMinimumSystemVersion ile aynı)
       MACOSX_DEPLOYMENT_TARGET: '12.0'
     steps:
@@ -259,7 +265,35 @@ jobs:
           if [ -n "$BAD" ]; then echo "macOS 12'den yeni sürüm isteyen ikililer var: $BAD"; exit 1; fi
           echo "Tüm ikililer macOS 12+ ile uyumlu ✔"
 
-      - name: DMG oluştur
+      - name: İmza sertifikasını geçici anahtar zincirine yükle
+        if: env.HAS_SIGNING == 'true'
+        env:
+          MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/imza.keychain-db"
+          KPASS="$(openssl rand -hex 24)"
+          printf '%s' "$MACOS_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/imza.p12"
+          curl -fsSL -o "$RUNNER_TEMP/DeveloperIDG2CA.cer" https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          security create-keychain -p "$KPASS" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KPASS" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/DeveloperIDG2CA.cer" -k "$KEYCHAIN" || true
+          security import "$RUNNER_TEMP/imza.p12" -P "$MACOS_CERTIFICATE_PASSWORD" \
+            -f pkcs12 -A -t cert -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KPASS" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm -f "$RUNNER_TEMP/imza.p12"
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" \
+            | sed -nE 's/.*"(Developer ID Application: [^"]+)".*/\1/p' | head -1)"
+          if [ -z "$IDENTITY" ]; then echo "Developer ID Application sertifikası bulunamadı"; exit 1; fi
+          echo "İmza kimliği: $IDENTITY"
+          echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+
+      - name: DMG oluştur (imzala + Apple onayı)
+        env:
+          MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
         run: |
           DMG="dist/YUCE-PDF-Editor-${APP_VERSION}-macOS-${{ matrix.arch }}.dmg"
           bash packaging/make_macos_dmg.sh "dist/YUCE PDF EDITOR.app" "$DMG"
@@ -275,6 +309,15 @@ jobs:
           hdiutil detach "$MNT"
           codesign --verify --deep --strict "$DEST/YUCE PDF EDITOR.app"
           "$DEST/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio" --self-test
+          if [ "$HAS_SIGNING" = "true" ]; then
+            # Gatekeeper: indirilen uygulama uyarısız açılmalı
+            spctl --assess --type execute -vv "$DEST/YUCE PDF EDITOR.app"
+            spctl --assess --type open --context context:primary-signature -vv "$DMG"
+          fi
+
+      - name: Geçici anahtar zincirini sil
+        if: always() && env.HAS_SIGNING == 'true'
+        run: security delete-keychain "$RUNNER_TEMP/imza.keychain-db" || true
 
       - name: Çıktıyı yükle
         uses: actions/upload-artifact@v4
@@ -321,7 +364,7 @@ jobs:
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-Setup.exe` | Windows 10/11 | Kurulum sihirbazı — Başlat menüsü, masaüstü kısayolu, PDF ilişkilendirmesi, Denetim Masası'ndan kaldırma |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-portable.exe` | Windows 10/11 | Taşınabilir tek dosya — kurulum yok, çift tıkla çalışır |
             | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-x86_64.run` | Linux (glibc 2.35+) | `bash YUCE-PDF-Editor-*.run` ile kurun, `--uninstall` ile kaldırın |
-            | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-macOS-arm64.dmg` | macOS 12+ (Apple Silicon: M1/M2/M3/M4) | Açın, uygulamayı Applications klasörüne sürükleyin. İlk açılışta: sağ tık → Aç |
+            | `YUCE-PDF-Editor-${{ needs.version.outputs.version }}-macOS-arm64.dmg` | macOS 12+ (Apple Silicon: M1/M2/M3/M4) | Açın, uygulamayı Applications klasörüne sürükleyin |
 
             `SHA256SUMS.txt` ile dosya bütünlüğünü doğrulayabilirsiniz.
 

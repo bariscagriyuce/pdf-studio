@@ -56,16 +56,8 @@ para Macs Intel. Abra o `.dmg` e arraste o
 **YUCE PDF EDITOR** para *Aplicativos*. O app aparece na lista *Abrir com* do
 Finder, e você também pode soltar PDFs sobre o ícone no Dock.
 
-> **Aviso "não pode ser verificado" na primeira abertura:** O app não é assinado
-> com um certificado de desenvolvedor Apple (não é notarizado), então o macOS avisa
-> na primeira vez. Abra-o uma vez assim: em *Aplicativos*, **clique com o botão
-> direito no ícone → Abrir → Abrir**. No macOS 15 ou posterior: tente abrir e depois
-> clique em **"Abrir Mesmo Assim"** em *Ajustes do Sistema → Privacidade e Segurança*.
-> Pelo Terminal:
->
-> ```bash
-> xattr -dr com.apple.quarantine "/Applications/YUCE PDF EDITOR.app"
-> ```
+O app é assinado com um Developer ID e notarizado pela Apple, então abre
+sem aviso de segurança.
 
 Para desinstalar, mova o app para o Lixo (ajustes:
 `~/Library/Preferences/com.pdfstudio.PDFStudio.plist`, cache:
