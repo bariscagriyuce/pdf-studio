@@ -17,6 +17,16 @@ ORDERS = (LRTB, RLTB, TBLR, TBRL)
 
 MAX_CELLS = 20   # satır ya da sütun için üst sınır
 
+# Sayfanın hücre içindeki yönü
+ROT_AUTO = "auto"            # hangisi daha büyük sığıyorsa (0° ya da 90°)
+ROTATIONS = (ROT_AUTO, "0", "90", "270", "180")
+
+# Kâğıt yönü
+PAPER_PRINTER = "printer"    # yazıcı ayarında ne seçiliyse
+PAPER_PORTRAIT = "portrait"
+PAPER_LANDSCAPE = "landscape"
+PAPERS = (PAPER_PRINTER, PAPER_PORTRAIT, PAPER_LANDSCAPE)
+
 
 @dataclass
 class NupOptions:
@@ -25,7 +35,8 @@ class NupOptions:
     order: str = LRTB
     gap_mm: float = 0.0       # hücreler arası boşluk
     border: bool = False      # her sayfanın çevresine ince çerçeve
-    autorotate: bool = True   # sayfa hücreye yan yatarak daha iyi sığıyorsa döndür
+    rotation: str = ROT_AUTO  # sayfa yönü: auto / 0 / 90 / 180 / 270 (saat yönünde)
+    paper: str = PAPER_PRINTER  # kâğıt yönü
 
     @property
     def per_sheet(self) -> int:
@@ -42,7 +53,8 @@ class NupOptions:
             order=self.order if self.order in ORDERS else LRTB,
             gap_mm=max(0.0, float(self.gap_mm)),
             border=bool(self.border),
-            autorotate=bool(self.autorotate),
+            rotation=str(self.rotation) if str(self.rotation) in ROTATIONS else ROT_AUTO,
+            paper=self.paper if self.paper in PAPERS else PAPER_PRINTER,
         )
 
     def to_dict(self) -> dict:
@@ -50,7 +62,9 @@ class NupOptions:
 
     @classmethod
     def from_dict(cls, d: dict | None) -> "NupOptions":
-        d = d or {}
+        d = dict(d or {})
+        if "rotation" not in d and "autorotate" in d:      # 1.4.x ayarları
+            d["rotation"] = ROT_AUTO if d["autorotate"] else "0"
         known = {k: d[k] for k in cls.__dataclass_fields__ if k in d}
         try:
             return cls(**known).normalized()
@@ -83,23 +97,32 @@ def cell_rects(width: float, height: float, rows: int, cols: int,
 
 
 def fit_in_cell(page_w: float, page_h: float, cell: tuple[float, float, float, float],
-                autorotate: bool = True) -> tuple[float, float, float, float, bool]:
+                rotation: str | int = ROT_AUTO) -> tuple[float, float, float, float, int]:
     """Sayfayı en-boy oranını koruyarak hücreye ortalar.
 
-    Döner: (x, y, gen, yük, döndür_mü). ``döndür_mü`` doğruysa dönen genişlik ve
-    yükseklik, sayfa 90° döndürüldükten sonraki kâğıt üzerindeki ölçülerdir.
+    Döner: (x, y, gen, yük, açı). ``açı`` saat yönünde 0/90/180/270'tir;
+    genişlik ve yükseklik, sayfa döndürüldükten sonra kâğıt üzerindeki
+    ölçülerdir.
     """
     cx, cy, cw, ch = cell
     if page_w <= 0 or page_h <= 0 or cw <= 0 or ch <= 0:
-        return cx, cy, 0.0, 0.0, False
-    s = min(cw / page_w, ch / page_h)
-    rotate = False
-    if autorotate:
-        s_rot = min(cw / page_h, ch / page_w)
-        if s_rot > s * 1.001:
-            s, rotate = s_rot, True
-    w, h = (page_h * s, page_w * s) if rotate else (page_w * s, page_h * s)
-    return cx + (cw - w) / 2, cy + (ch - h) / 2, w, h, rotate
+        return cx, cy, 0.0, 0.0, 0
+    if str(rotation) == ROT_AUTO:
+        s0 = min(cw / page_w, ch / page_h)
+        s90 = min(cw / page_h, ch / page_w)
+        angle = 90 if s90 > s0 * 1.001 else 0
+    else:
+        try:
+            angle = int(rotation) % 360
+        except (TypeError, ValueError):
+            angle = 0
+        if angle not in (0, 90, 180, 270):
+            angle = 0
+    sideways = angle in (90, 270)
+    pw, ph = (page_h, page_w) if sideways else (page_w, page_h)
+    s = min(cw / pw, ch / ph)
+    w, h = pw * s, ph * s
+    return cx + (cw - w) / 2, cy + (ch - h) / 2, w, h, angle
 
 
 def sheets(pages: list[int], per_sheet: int) -> list[list[int]]:

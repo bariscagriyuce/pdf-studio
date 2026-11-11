@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -99,9 +100,9 @@ def _pacman_owns(path: str) -> bool:
 
 def mac_bundle_path(executable: str) -> str | None:
     """…/YUCE PDF EDITOR.app/Contents/MacOS/PDFStudio → …/YUCE PDF EDITOR.app"""
-    p = os.path.abspath(executable)
-    marker = ".app" + os.sep + "Contents" + os.sep + "MacOS"
-    i = p.find(marker)
+    # Yalnızca macOS yolu; Windows'ta sınanırken de POSIX kurallarıyla işlenir
+    p = posixpath.abspath(executable)
+    i = p.find(".app/Contents/MacOS/")
     return p[:i + 4] if i >= 0 else None
 
 

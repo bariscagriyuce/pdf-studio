@@ -1168,8 +1168,6 @@ MESSAGES = {
         'Columns:',
     'Sayfa sırası:':
         'Page order:',
-    'Daha iyi sığıyorsa sayfayı döndür':
-        'Rotate pages when they fit better',
     'Her sayfanın çevresine çerçeve çiz':
         'Draw a border around each page',
     'Kâğıt boyutu ve kenar boşlukları yazıcı ayarlarından gelir. Sayfalar iki kez küçülmesin diye yazıcı özelliklerindeki "Pages per sheet" seçeneğini 1 olarak bırakın.':
@@ -1178,10 +1176,6 @@ MESSAGES = {
         {'one': '= {n} page per sheet', 'other': '= {n} pages per sheet'},
     '{rows} satır × {cols} sütun':
         '{rows} rows × {cols} columns',
-    'Bir kâğıda kaç sayfa basılacağını seçin':
-        'Choose how many pages to print on one sheet',
-    'Kâğıt başına: {rows} × {cols}':
-        'Per sheet: {rows} × {cols}',
     '<h3>Yeni sürüm hazır: {new}</h3><p>Kullandığınız sürüm: {current}</p>':
         '<h3>New version available: {new}</h3><p>Your version: {current}</p>',
     'Açılışta güncellemeleri denetle':
@@ -1238,4 +1232,30 @@ MESSAGES = {
         'Open download page',
     'Şimdi güncelle':
         'Update now',
+    'Otomatik (en büyük sığan)':
+        'Automatic (largest fit)',
+    'Döndürme yok':
+        'No rotation',
+    '90° sağa (saat yönünde)':
+        '90° right (clockwise)',
+    '90° sola (saat yönü tersine)':
+        '90° left (counterclockwise)',
+    'Baş aşağı (180°)':
+        'Upside down (180°)',
+    'Yazıcı ayarındaki gibi':
+        'As in printer settings',
+    'Dikey':
+        'Portrait',
+    'Sayfa yönü:':
+        'Page orientation:',
+    'Kâğıt yönü:':
+        'Paper orientation:',
+    'Çıktının tamamını sayfa sayfa gösterir; oradan yazdırabilirsiniz.':
+        'Shows the whole printout sheet by sheet; you can print from there.',
+    'Yerleşim şeması: numaralar basım sırasını, kalın kenar sayfanın üstünü gösterir.':
+        'Layout sketch: numbers show the print order, the thick edge marks the top of each page.',
+    'Baskı önizleme':
+        'Print preview',
+    'Sayfa düzeni: kâğıt başına sayfa, sayfa ve kâğıt yönü':
+        'Page layout: pages per sheet, page and paper orientation',
 }

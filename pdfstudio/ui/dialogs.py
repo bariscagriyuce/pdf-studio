@@ -4,8 +4,8 @@ from __future__ import annotations
 import os
 
 import pymupdf
-from PySide6.QtCore import QBuffer, QPointF, QSize, Qt
-from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen, QPixmap
+from PySide6.QtCore import QBuffer, QPointF, QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                                QDoubleSpinBox, QFileDialog, QFormLayout, QGroupBox,
                                QHBoxLayout, QLabel, QLineEdit, QListWidget,
@@ -1080,7 +1080,24 @@ class NupWidget(QWidget):
         "tbrl": N_("Yukarıdan aşağı, sonra sola"),
     }
 
-    def __init__(self, opts=None, parent=None):
+    ROTATION_LABELS = {
+        "auto": N_("Otomatik (en büyük sığan)"),
+        "0": N_("Döndürme yok"),
+        "90": N_("90° sağa (saat yönünde)"),
+        "270": N_("90° sola (saat yönü tersine)"),
+        "180": N_("Baş aşağı (180°)"),
+    }
+    PAPER_LABELS = {
+        "printer": N_("Yazıcı ayarındaki gibi"),
+        "portrait": N_("Dikey"),
+        "landscape": N_("Yatay"),
+    }
+
+    def __init__(self, opts=None, parent=None, *, page_size=None, paper_size=None,
+                 on_preview=None):
+        """``page_size``: belgenin ilk sayfasının (gen, yük) ölçüsü, ``paper_size``:
+        yazıcıdaki kâğıdın (gen, yük) ölçüsü — ikisi de yalnızca küçük şema için.
+        ``on_preview`` verilirse "Baskı önizleme" düğmesi gösterilir."""
         super().__init__(parent)
         from ..core import nup
         self._nup = nup
@@ -1132,13 +1149,35 @@ class NupWidget(QWidget):
         self.gap.setValue(opts.gap_mm)
         form.addRow(_("Aralık:"), self.gap)
 
-        self.autorotate = QCheckBox(_("Daha iyi sığıyorsa sayfayı döndür"))
-        self.autorotate.setChecked(opts.autorotate)
+        self.rotation = QComboBox()
+        for key, label in self.ROTATION_LABELS.items():
+            self.rotation.addItem(_(label), key)
+        self.rotation.setCurrentIndex(max(0, self.rotation.findData(opts.rotation)))
+        form.addRow(_("Sayfa yönü:"), self.rotation)
+
+        self.paper = QComboBox()
+        for key, label in self.PAPER_LABELS.items():
+            self.paper.addItem(_(label), key)
+        self.paper.setCurrentIndex(max(0, self.paper.findData(opts.paper)))
+        form.addRow(_("Kâğıt yönü:"), self.paper)
+
         self.border = QCheckBox(_("Her sayfanın çevresine çerçeve çiz"))
         self.border.setChecked(opts.border)
-        form.addRow("", self.autorotate)
         form.addRow("", self.border)
-        lay.addWidget(grid_box)
+
+        top = QHBoxLayout()
+        top.addWidget(grid_box, 1)
+        self.sketch = LayoutSketch(page_size or (595, 842), paper_size or (595, 842))
+        side = QVBoxLayout()
+        side.addWidget(self.sketch)
+        if on_preview is not None:
+            pv = QPushButton(_("Baskı önizleme…"))
+            pv.setToolTip(_("Çıktının tamamını sayfa sayfa gösterir; oradan yazdırabilirsiniz."))
+            pv.clicked.connect(on_preview)
+            side.addWidget(pv)
+        side.addStretch(1)
+        top.addLayout(side)
+        lay.addLayout(top)
 
         hint = QLabel(_("Kâğıt boyutu ve kenar boşlukları yazıcı ayarlarından gelir. "
                         "Sayfalar iki kez küçülmesin diye yazıcı özelliklerindeki "
@@ -1150,7 +1189,12 @@ class NupWidget(QWidget):
 
         self.rows.valueChanged.connect(self._update_total)
         self.cols.valueChanged.connect(self._update_total)
+        for sig in (self.rows.valueChanged, self.cols.valueChanged, self.gap.valueChanged,
+                    self.order.currentIndexChanged, self.rotation.currentIndexChanged,
+                    self.paper.currentIndexChanged, self.border.toggled):
+            sig.connect(lambda *_a: self.sketch.set_options(self.options()))
         self._update_total()
+        self.sketch.set_options(self.options())
 
     def _set_grid(self, rows: int, cols: int) -> None:
         self.rows.setValue(rows)
@@ -1164,24 +1208,107 @@ class NupWidget(QWidget):
         return self._nup.NupOptions(
             rows=self.rows.value(), cols=self.cols.value(),
             order=self.order.currentData() or "lrtb", gap_mm=self.gap.value(),
-            border=self.border.isChecked(), autorotate=self.autorotate.isChecked(),
+            border=self.border.isChecked(),
+            rotation=self.rotation.currentData() or "auto",
+            paper=self.paper.currentData() or "printer",
         ).normalized()
+
+
+class LayoutSketch(QWidget):
+    """Kâğıt üzerindeki yerleşimin küçük şeması: sayfa kutuları, sıra numarası
+    ve her sayfanın üst kenarı (kalın çizgi) — yönü bir bakışta gösterir."""
+
+    def __init__(self, page_size, paper_size, parent=None):
+        super().__init__(parent)
+        self.page_size = page_size
+        self.paper_size = paper_size
+        self.opts = None
+        self.setFixedSize(190, 210)
+        self.setToolTip(_("Yerleşim şeması: numaralar basım sırasını, kalın kenar "
+                          "sayfanın üstünü gösterir."))
+
+    def set_options(self, opts) -> None:
+        self.opts = opts
+        self.update()
+
+    def paintEvent(self, _e):
+        from ..core import nup
+        if self.opts is None:
+            return
+        o = self.opts
+        pw, ph = self.paper_size
+        if (o.paper == nup.PAPER_PORTRAIT and pw > ph) or \
+                (o.paper == nup.PAPER_LANDSCAPE and ph > pw):
+            pw, ph = ph, pw
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing, True)
+        pal = self.palette()
+        avail_w, avail_h = self.width() - 12, self.height() - 12
+        s = min(avail_w / pw, avail_h / ph)
+        sw, sh = pw * s, ph * s
+        ox, oy = (self.width() - sw) / 2, (self.height() - sh) / 2
+        p.setPen(QPen(pal.mid().color(), 1))
+        p.setBrush(QColor(255, 255, 255))
+        p.drawRect(QRectF(ox, oy, sw, sh))
+        pad = 4.0
+        gap = o.gap_mm * 72 / 25.4 * s
+        grid = nup.cell_rects(sw - 2 * pad, sh - 2 * pad, o.rows, o.cols, gap)
+        n = o.per_sheet
+        font = p.font()
+        for i in range(n):
+            r, c = nup.cell_position(i, o.rows, o.cols, o.order)
+            cx, cy, cw, ch = grid[r][c]
+            x, y, w, h, angle = nup.fit_in_cell(
+                self.page_size[0], self.page_size[1],
+                (ox + pad + cx, oy + pad + cy, cw, ch), o.rotation)
+            if w < 2 or h < 2:
+                continue
+            rect = QRectF(x, y, w, h)
+            p.setPen(QPen(QColor(120, 120, 120), 1))
+            p.setBrush(QColor(225, 232, 245))
+            p.drawRect(rect)
+            # sayfanın üst kenarı: 0° üst, 90° sağ, 180° alt, 270° sol
+            edge = {0: (rect.topLeft(), rect.topRight()),
+                    90: (rect.topRight(), rect.bottomRight()),
+                    180: (rect.bottomLeft(), rect.bottomRight()),
+                    270: (rect.topLeft(), rect.bottomLeft())}[angle]
+            p.setPen(QPen(QColor(40, 90, 200), 2.5))
+            p.drawLine(edge[0], edge[1])
+            if min(w, h) >= 12:
+                p.save()
+                p.translate(rect.center())
+                p.rotate(angle)
+                f = QFont(font)
+                f.setPixelSize(max(7, int(min(w, h) * 0.45)))
+                p.setFont(f)
+                p.setPen(QColor(30, 30, 30))
+                iw, ih = (h, w) if angle in (90, 270) else (w, h)
+                p.drawText(QRectF(-iw / 2, -ih / 2, iw, ih), Qt.AlignCenter, str(i + 1))
+                p.restore()
+        p.end()
 
 
 class NupDialog(QDialog):
     """NupWidget'ı tek başına gösterir (yerel yazdırma kutusu olan sistemler
     ve baskı önizleme için)."""
 
-    def __init__(self, opts=None, parent=None):
+    def __init__(self, opts=None, parent=None, *, page_size=None, paper_size=None,
+                 preview: bool = False):
         super().__init__(parent)
         self.setWindowTitle(_("Sayfa düzeni"))
+        self.want_preview = False
         lay = QVBoxLayout(self)
-        self.widget = NupWidget(opts, self)
+        self.widget = NupWidget(opts, self, page_size=page_size, paper_size=paper_size,
+                                on_preview=self._preview if preview else None)
         lay.addWidget(self.widget)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(self.accept)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
+
+    def _preview(self):
+        self.want_preview = True
+        self.accept()
 
     def options(self):
         return self.widget.options()

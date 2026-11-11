@@ -854,12 +854,32 @@ class MainWindow(QMainWindow):
             return list(range(a - 1, b))
         return list(range(total))
 
+    @staticmethod
+    def _apply_paper_orientation(printer: QPrinter, paper: str) -> None:
+        """Kâğıdı istenen yöne çevirir. Qt'nin "Portrait" ayarı kâğıt ölçüsünü
+        olduğu gibi kullanır; genişliği yüksekliğinden büyük özel bir etiket
+        kâğıdında bu yatay demektir. Bu yüzden gerçek en/boya bakılır."""
+        # Yazıcının kendi yönü bir kez saklanır; önizlemede "yazıcı ayarındaki
+        # gibi"ye dönülünce ona geri gelinir.
+        if not hasattr(printer, "_pdfstudio_orientation"):
+            printer._pdfstudio_orientation = printer.pageLayout().orientation()
+        printer.setPageOrientation(printer._pdfstudio_orientation)
+        if paper not in (nup.PAPER_PORTRAIT, nup.PAPER_LANDSCAPE):
+            return
+        r = printer.pageLayout().fullRectPoints()
+        is_portrait = r.height() >= r.width()
+        if is_portrait != (paper == nup.PAPER_PORTRAIT):
+            cur = printer.pageLayout().orientation()
+            printer.setPageOrientation(QPageLayout.Landscape if cur == QPageLayout.Portrait
+                                       else QPageLayout.Portrait)
+
     def _print_render(self, printer: QPrinter, opts: nup.NupOptions | None = None) -> int:
         """Sayfaları kâğıtlara çizer (kâğıt başına satır × sütun sayfa).
 
         Basılan kâğıt sayısını döndürür."""
         opts = (opts or self._nup_options()).normalized()
         pages = self._print_pages(printer)
+        self._apply_paper_orientation(printer, opts.paper)
         painter = QPainter()
         if not painter.begin(printer):
             return 0
@@ -881,13 +901,16 @@ class MainWindow(QMainWindow):
                     cx, cy, cw, ch = grid[r][c]
                     page = self.document.page(pno)
                     pw, ph = page.rect.width, page.rect.height
-                    x, y, w, h, rot = nup.fit_in_cell(
-                        pw, ph, (vp.x() + cx, vp.y() + cy, cw, ch), opts.autorotate)
+                    x, y, w, h, angle = nup.fit_in_cell(
+                        pw, ph, (vp.x() + cx, vp.y() + cy, cw, ch), opts.rotation)
                     if w < 1 or h < 1:
                         continue
+                    sideways = angle in (90, 270)
+                    # sayfanın kendi yönündeki ölçüleri (döndürmeden önce)
+                    iw, ih = (h, w) if sideways else (w, h)
                     # Kâğıttaki boyuta göre çözünürlük; bellek için en çok
                     # 600 DPI ve ~80 megapiksel.
-                    zoom = (h if rot else w) / pw
+                    zoom = iw / pw
                     if res > 600:
                         zoom *= 600 / res
                     max_px = 80_000_000
@@ -899,12 +922,9 @@ class MainWindow(QMainWindow):
                                  QImage.Format_RGB888).copy()
                     painter.save()
                     painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-                    if rot:
-                        painter.translate(x + w / 2, y + h / 2)
-                        painter.rotate(90)
-                        painter.drawImage(QRectF(-h / 2, -w / 2, h, w), img)
-                    else:
-                        painter.drawImage(QRectF(x, y, w, h), img)
+                    painter.translate(x + w / 2, y + h / 2)
+                    painter.rotate(angle)
+                    painter.drawImage(QRectF(-iw / 2, -ih / 2, iw, ih), img)
                     painter.restore()
                     if opts.border:
                         painter.save()
@@ -916,41 +936,62 @@ class MainWindow(QMainWindow):
             painter.end()
         return printed
 
+    def _print_sizes(self, printer: QPrinter) -> dict:
+        """Yerleşim şeması için ilk sayfanın ve kâğıdın ölçüleri (nokta)."""
+        r = self.document.page(0).rect
+        paper = printer.pageLayout().fullRectPoints()
+        return {"page_size": (r.width, r.height),
+                "paper_size": (paper.width() or 595, paper.height() or 842)}
+
     def file_print(self):
         if not self.document.is_open:
             return
         printer = QPrinter(QPrinter.HighResolution)
         printer.setDocName(self.document.display_name)
         opts = self._nup_options()
+        sizes = self._print_sizes(printer)
         native = sys.platform.startswith(("win", "darwin"))
         if native:
             # Windows/macOS yerel yazdırma kutusuna sekme eklenemez; sayfa
             # düzeni önce ayrı bir pencerede sorulur.
-            nd = dlg.NupDialog(opts, self)
+            nd = dlg.NupDialog(opts, self, preview=True, **sizes)
             if not nd.exec():
                 return
             opts = nd.options()
             self._save_nup_options(opts)
+            if nd.want_preview:
+                self.file_print_preview(printer)
+                return
         d = QPrintDialog(printer, self)
         d.setWindowTitle(_("Yazdır"))
         d.setMinMax(1, self.document.page_count)
         tab = None
+        want = {"preview": False}
         if not native:
-            tab = dlg.NupWidget(opts)
+            def preview():
+                want["preview"] = True
+                d.accept()
+            tab = dlg.NupWidget(opts, on_preview=preview, **sizes)
             d.setOptionTabs([tab])
         if d.exec():
             if tab is not None:
                 opts = tab.options()
                 self._save_nup_options(opts)
-            self._print_render(printer, opts)
+            if want["preview"]:
+                # Yazdır penceresinde seçilen yazıcı/kâğıt ayarlarıyla önizle
+                self.file_print_preview(printer)
+            else:
+                self._print_render(printer, opts)
 
-    def file_print_preview(self):
+    def file_print_preview(self, printer: QPrinter | None = None):
         if not self.document.is_open:
             return
-        printer = QPrinter(QPrinter.HighResolution)
-        printer.setDocName(self.document.display_name)
+        if not isinstance(printer, QPrinter):     # menüden: bool gelir
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setDocName(self.document.display_name)
         d = QPrintPreviewDialog(printer, self)
-        d.resize(1000, 800)
+        d.setWindowTitle(_("Baskı önizleme"))
+        d.resize(1100, 820)
         d.paintRequested.connect(lambda pr: self._print_render(pr))
         tb = d.findChild(QToolBar)
         preview = d.findChild(QPrintPreviewWidget)
@@ -959,20 +1000,28 @@ class MainWindow(QMainWindow):
 
             def label():
                 o = self._nup_options()
-                act.setText(_("Kâğıt başına: {rows} × {cols}").format(rows=o.rows, cols=o.cols))
+                act.setText(f"{o.rows} × {o.cols}")
 
             def change():
-                nd = dlg.NupDialog(self._nup_options(), d)
+                nd = dlg.NupDialog(self._nup_options(), d, **self._print_sizes(printer))
                 if nd.exec():
                     self._save_nup_options(nd.options())
                     label()
                     preview.updatePreview()
 
             label()
-            act.setToolTip(_("Bir kâğıda kaç sayfa basılacağını seçin"))
+            act.setToolTip(_("Sayfa düzeni: kâğıt başına sayfa, sayfa ve kâğıt yönü"))
+            act.setStatusTip(act.toolTip())
+            act.setIcon(icons.icon("grid", "#3b4252", 22))
             act.triggered.connect(change)
-            tb.addSeparator()
-            tb.addAction(act)
+            # Başa konur: sona eklenince dar pencerede taşma menüsüne düşüyor
+            first = tb.actions()[0] if tb.actions() else None
+            tb.insertAction(first, act)
+            if first is not None:
+                tb.insertSeparator(first)
+            btn = tb.widgetForAction(act)
+            if btn is not None:     # araç çubuğu yalnızca simge gösterir; metni de göster
+                btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         d.exec()
 
     # ------------------------------------------------------- seçili alanı yazdır

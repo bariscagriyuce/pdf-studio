@@ -1168,8 +1168,6 @@ MESSAGES = {
         'Colunas:',
     'Sayfa sırası:':
         'Ordem das páginas:',
-    'Daha iyi sığıyorsa sayfayı döndür':
-        'Girar páginas quando couberem melhor',
     'Her sayfanın çevresine çerçeve çiz':
         'Desenhar borda em volta de cada página',
     'Kâğıt boyutu ve kenar boşlukları yazıcı ayarlarından gelir. Sayfalar iki kez küçülmesin diye yazıcı özelliklerindeki "Pages per sheet" seçeneğini 1 olarak bırakın.':
@@ -1178,10 +1176,6 @@ MESSAGES = {
         {'one': '= {n} página por folha', 'other': '= {n} páginas por folha'},
     '{rows} satır × {cols} sütun':
         '{rows} linhas × {cols} colunas',
-    'Bir kâğıda kaç sayfa basılacağını seçin':
-        'Escolha quantas páginas imprimir em uma folha',
-    'Kâğıt başına: {rows} × {cols}':
-        'Por folha: {rows} × {cols}',
     '<h3>Yeni sürüm hazır: {new}</h3><p>Kullandığınız sürüm: {current}</p>':
         '<h3>Nova versão disponível: {new}</h3><p>Sua versão: {current}</p>',
     'Açılışta güncellemeleri denetle':
@@ -1238,4 +1232,30 @@ MESSAGES = {
         'Abrir página de download',
     'Şimdi güncelle':
         'Atualizar agora',
+    'Otomatik (en büyük sığan)':
+        'Automático (maior encaixe)',
+    'Döndürme yok':
+        'Sem rotação',
+    '90° sağa (saat yönünde)':
+        '90° à direita (sentido horário)',
+    '90° sola (saat yönü tersine)':
+        '90° à esquerda (sentido anti-horário)',
+    'Baş aşağı (180°)':
+        'De cabeça para baixo (180°)',
+    'Yazıcı ayarındaki gibi':
+        'Conforme a impressora',
+    'Dikey':
+        'Retrato',
+    'Sayfa yönü:':
+        'Orientação da página:',
+    'Kâğıt yönü:':
+        'Orientação do papel:',
+    'Çıktının tamamını sayfa sayfa gösterir; oradan yazdırabilirsiniz.':
+        'Mostra toda a impressão folha por folha; você pode imprimir a partir dela.',
+    'Yerleşim şeması: numaralar basım sırasını, kalın kenar sayfanın üstünü gösterir.':
+        'Esquema do layout: os números mostram a ordem de impressão e a borda grossa indica o topo de cada página.',
+    'Baskı önizleme':
+        'Visualizar impressão',
+    'Sayfa düzeni: kâğıt başına sayfa, sayfa ve kâğıt yönü':
+        'Layout da página: páginas por folha, orientação da página e do papel',
 }

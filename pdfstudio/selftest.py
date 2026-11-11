@@ -225,6 +225,22 @@ def run(screenshot: str | None = None, log_path: str | None = None) -> int:
         want = (total + 1) // 2
         expect(n == want, f"{want} kâğıt bekleniyordu, {n} basıldı")
         expect(nup.cell_position(1, 2, 3, nup.TBLR) == (1, 0), "sayfa sırası yanlış")
+        # yatay etiket, dikey hücre: otomatik 90°, elle 0° / 270°
+        cell = (0, 0, 50, 100)
+        expect(nup.fit_in_cell(114, 71, cell, "auto")[4] == 90, "otomatik döndürme")
+        x, y, w, h, a = nup.fit_in_cell(114, 71, cell, "0")
+        expect(a == 0 and w > h, "döndürmesiz yerleşim")
+        x, y, w, h, a = nup.fit_in_cell(114, 71, cell, "270")
+        expect(a == 270 and h > w, "270° yerleşim")
+        expect(nup.NupOptions.from_dict({"autorotate": False}).rotation == "0",
+               "eski ayar okunamadı")
+        pr2 = QPrinter(QPrinter.HighResolution)
+        pr2.setOutputFormat(QPrinter.PdfFormat)
+        pr2.setOutputFileName(os.path.join(tmp, "nup_dikey.pdf"))
+        win._print_render(pr2, nup.NupOptions(rows=3, cols=1, rotation="90",
+                                              paper=nup.PAPER_LANDSCAPE))
+        r = pr2.pageLayout().fullRectPoints()
+        expect(r.width() > r.height(), "kâğıt yatay çevrilmedi")
     check("kâğıt başına birden çok sayfa yazdır", _nup_print)
 
     def _updater():
