@@ -53,15 +53,8 @@ sürüm yoktur. `.dmg`'yi açın ve **YUCE PDF EDITOR**'ü
 *Applications* klasörüne sürükleyin. Uygulama Finder'daki *Birlikte Aç* listesine
 eklenir; PDF'leri Dock simgesinin üzerine sürükleyerek de açabilirsiniz.
 
-> **İlk açılışta "doğrulanamadı" uyarısı:** Uygulama Apple geliştirici
-> sertifikasıyla imzalanmadığı (notarize edilmediği) için macOS ilk açılışta
-> uyarır. Bir kez şöyle açın: *Applications*'ta simgeye **sağ tıklayın → Aç → Aç**.
-> macOS 15 ve sonrasında: önce açmayı deneyin, sonra *Sistem Ayarları → Gizlilik
-> ve Güvenlik* altındaki **"Yine de Aç"** düğmesine basın. Terminal'den:
->
-> ```bash
-> xattr -dr com.apple.quarantine "/Applications/YUCE PDF EDITOR.app"
-> ```
+Uygulama Developer ID ile imzalı ve Apple tarafından onaylıdır (notarized);
+indirip açtığınızda güvenlik uyarısı çıkmaz.
 
 Kaldırmak için uygulamayı Çöp Sepeti'ne taşıyın (ayarlar:
 `~/Library/Preferences/com.pdfstudio.PDFStudio.plist`, önbellek:

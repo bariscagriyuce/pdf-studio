@@ -53,15 +53,8 @@ Intel Macs. Open the `.dmg` and drag
 **YUCE PDF EDITOR** into *Applications*. The app appears in Finder's *Open With*
 list, and you can also drop PDFs onto its Dock icon.
 
-> **"Cannot be verified" warning on first launch:** The app is not signed with an
-> Apple developer certificate (not notarized), so macOS warns the first time.
-> Open it once like this: in *Applications*, **right-click the icon → Open → Open**.
-> On macOS 15 and later: try to open it, then click **"Open Anyway"** under
-> *System Settings → Privacy & Security*. From Terminal:
->
-> ```bash
-> xattr -dr com.apple.quarantine "/Applications/YUCE PDF EDITOR.app"
-> ```
+The app is signed with a Developer ID and notarized by Apple, so it opens
+without a security warning.
 
 To uninstall, move the app to the Trash (settings:
 `~/Library/Preferences/com.pdfstudio.PDFStudio.plist`, cache:
